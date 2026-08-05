@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import logoImg from '../assets/logo.png';
 import { getProjectsAsync } from '../utils/dataStore';
-import { Building2, MapPin, Calendar, Layers, ShieldCheck, ArrowUpRight, Search, X, Icon as LucideIcon } from 'lucide-react';
+import { Building2, MapPin, Calendar, Layers, ShieldCheck, ArrowUpRight, Search, X } from 'lucide-react';
 
 export default function ProjectsApp() {
   const [projects, setProjects] = useState([]);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, Clock, Building2, Award, Users, Globe, ArrowRight } from 'lucide-react';
 import logoImg from '../assets/logo.png?url';
-import { getPartners, getProjects, getPartnersAsync, getProjectsAsync } from '../utils/dataStore';
+import { getPartnersAsync, getProjectsAsync } from '../utils/dataStore';
 
 export default function ClientsApp() {
   // Navigation & Scroll State

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { GOOGLE_SHEET_CSV_URL } from '../config';
 import logoImg from '../assets/logo.png?url';
-import { getProducts, getProductsAsync, getAboutSectionAsync, defaultAboutSection } from '../utils/dataStore';
+import { getProductsAsync, getAboutSectionAsync, defaultAboutSection } from '../utils/dataStore';
 
 // --- INLINE CUSTOM ICON COMPONENT (To guarantee zero broken dependencies) ---
 const Icon = ({ name, className = "w-6 h-6", ...props }) => {
