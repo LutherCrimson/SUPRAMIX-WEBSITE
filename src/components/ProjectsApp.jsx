@@ -54,10 +54,10 @@ export default function ProjectsApp() {
 
       {/* NAVBAR */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-[#070D1F]/90 backdrop-blur-xl border-b border-white/10">
-        <div className="max-w-[1500px] mx-auto px-6 h-20 flex items-center justify-between gap-6">
+        <div className="max-w-375 mx-auto px-6 h-20 flex items-center justify-between gap-6">
 
           {/* Logo */}
-          <a href="/" className="flex items-center gap-1 group flex-shrink-0 cursor-pointer">
+          <a href="/" className="flex items-center gap-1 group shrink-0 cursor-pointer">
             <img
               src={logoImg?.src || logoImg}
               alt="SUPRAMIX Logo"
@@ -92,19 +92,19 @@ export default function ProjectsApp() {
               >
                 {item.name}
                 {item.link === '/projects' && (
-                  <span className="absolute bottom-0 left-0 w-full h-[2px] bg-[#0F4CFF]" />
+                  <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#0F4CFF]" />
                 )}
               </a>
             ))}
           </div>
 
           {/* Right Action Buttons */}
-          <div className="hidden lg:flex items-center gap-3 xl:gap-4 flex-shrink-0">
+          <div className="hidden lg:flex items-center gap-3 xl:gap-4 shrink-0">
             {/* Language toggle */}
             <div
               className="flex items-center gap-2 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 px-3 py-1.5 rounded-xl cursor-pointer transition-colors text-white text-xs font-black select-none"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 30" className="w-5 h-3 object-cover rounded-[2px] shadow-sm flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 30" className="w-5 h-3 object-cover rounded-xs shadow-sm shrink-0">
                 <rect width="50" height="30" fill="#012169" />
                 <path d="M0 0l50 30M50 0L0 30" stroke="#fff" strokeWidth="6" />
                 <path d="M0 0l50 30M50 0L0 30" stroke="#C8102E" strokeWidth="4" />
@@ -153,7 +153,7 @@ export default function ProjectsApp() {
       </nav>
 
       {/* HERO SECTION */}
-      <section className="pt-32 pb-20 px-6 relative overflow-hidden bg-gradient-to-b from-[#0B152C] via-[#070D1F] to-[#070D1F]">
+      <section className="pt-32 pb-20 px-6 relative overflow-hidden bg-linear-to-b from-[#0B152C] via-[#070D1F] to-[#070D1F]">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-[#0F4CFF]/15 blur-[120px] rounded-full pointer-events-none" />
 
         <div className="max-w-6xl mx-auto text-center relative z-10 space-y-6">
@@ -163,7 +163,7 @@ export default function ProjectsApp() {
           </div>
 
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-tight text-white max-w-4xl mx-auto">
-            Portofolio <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#0F4CFF] via-[#4E7DFF] to-white">Proyek Landmark</span> SUPRAMIX
+            Portofolio <span className="bg-clip-text text-transparent bg-linear-to-r from-[#0F4CFF] via-[#4E7DFF] to-white">Proyek Landmark</span> SUPRAMIX
           </h1>
 
           <p className="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed">
@@ -269,7 +269,7 @@ export default function ProjectsApp() {
 
                       {proj.materialsUsed && (
                         <div className="pt-4 border-t border-slate-100 flex items-center gap-2 text-xs">
-                          <Layers className="w-4 h-4 text-[#0F4CFF] flex-shrink-0" />
+                          <Layers className="w-4 h-4 text-[#0F4CFF] shrink-0" />
                           <span className="font-semibold text-slate-500">Material:</span>
                           <span className="font-bold text-[#0B1F4D] truncate">{proj.materialsUsed}</span>
                         </div>
@@ -308,7 +308,7 @@ export default function ProjectsApp() {
             </button>
 
             {/* Left Image */}
-            <div className="w-full md:w-1/2 h-64 md:h-auto bg-slate-100 relative flex-shrink-0">
+            <div className="w-full md:w-1/2 h-64 md:h-auto bg-slate-100 relative shrink-0">
               <img
                 src={selectedProject.image || '/Projects/sunter1.jpeg'}
                 alt={selectedProject.title}

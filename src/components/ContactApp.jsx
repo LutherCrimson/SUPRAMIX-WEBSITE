@@ -69,7 +69,7 @@ export default function ContactApp() {
       {/* STICKY LUXURY HEADER */}
       <header className={`fixed top-0 left-0 w-full z-40 transition-all duration-500 bg-[#0D1A3B]/95 backdrop-blur-md border-b border-white/10 ${scrolled ? 'py-2 shadow-md shadow-black/20' : 'py-3.5'
         }`}>
-        <div className="max-w-[1500px] mx-auto px-6 flex flex-col gap-3">
+        <div className="max-w-375 mx-auto px-6 flex flex-col gap-3">
 
           {/* Row 1: Logo and Desktop Navigation */}
           <div className="flex items-center justify-between gap-6">
@@ -77,7 +77,7 @@ export default function ContactApp() {
             {/* Logo: Supramix / Bitumen And Membrane */}
             <a
               href="/"
-              className="flex items-center gap-1 group flex-shrink-0 cursor-pointer"
+              className="flex items-center gap-1 group shrink-0 cursor-pointer"
             >
               <img
                 src={logoImg?.src || logoImg}
@@ -131,20 +131,20 @@ export default function ContactApp() {
                 >
                   {item.name}
                   {item.name === 'Contact' && (
-                    <span className="absolute bottom-0 left-0 w-full h-[2px] bg-[#0F4CFF]" />
+                    <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#0F4CFF]" />
                   )}
                 </a>
               ))}
             </div>
 
             {/* Right Action Buttons */}
-            <div className="hidden lg:flex items-center gap-3 xl:gap-4 flex-shrink-0">
+            <div className="hidden lg:flex items-center gap-3 xl:gap-4 shrink-0">
               {/* Language toggle matching user image */}
               <div
                 className="flex items-center gap-1.5 cursor-pointer hover:text-white transition-colors py-1.5"
                 onClick={() => triggerNotification("Language is set to English (UK)")}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 30" className="w-5 h-3 object-cover rounded-[2px] shadow-sm flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 30" className="w-5 h-3 object-cover rounded-xs shadow-sm shrink-0">
                   <rect width="50" height="30" fill="#012169" />
                   <path d="M0 0l50 30M50 0L0 30" stroke="#fff" strokeWidth="6" />
                   <path d="M0 0l50 30M50 0L0 30" stroke="#C8102E" strokeWidth="4" />
@@ -264,7 +264,7 @@ export default function ContactApp() {
                   setMobileMenuOpen(false);
                 }}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 30" className="w-5 h-3 object-cover rounded-[2px] shadow-sm flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 30" className="w-5 h-3 object-cover rounded-xs shadow-sm shrink-0">
                   <rect width="50" height="30" fill="#012169" />
                   <path d="M0 0l50 30M50 0L0 30" stroke="#fff" strokeWidth="6" />
                   <path d="M0 0l50 30M50 0L0 30" stroke="#C8102E" strokeWidth="4" />
@@ -293,8 +293,8 @@ export default function ContactApp() {
             alt="Supramix Technical Building"
             className="w-full h-full object-cover object-center opacity-30 transform scale-105"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#070D1F]/90 via-[#0B1F4D]/80 to-[#FAFBFD]" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0F4CFF]/15 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-b from-[#070D1F]/90 via-[#0B1F4D]/80 to-[#FAFBFD]" />
+          <div className="absolute inset-0 bg-linear-to-r from-[#0F4CFF]/15 to-transparent" />
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-6 text-center text-white flex flex-col items-center">
@@ -307,7 +307,7 @@ export default function ContactApp() {
           </div>
 
           <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-none mb-6 max-w-4xl">
-            Contact the <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#0F4CFF] via-[#4E7DFF] to-white">SUPRAMIX</span> Expert
+            Contact the <span className="bg-clip-text text-transparent bg-linear-to-r from-[#0F4CFF] via-[#4E7DFF] to-white">SUPRAMIX</span> Expert
           </h1>
 
           <p className="text-base md:text-lg text-slate-300 max-w-2xl leading-relaxed">
@@ -331,7 +331,7 @@ export default function ContactApp() {
                 <div className="space-y-6">
                   {/* Whatsapp Detail */}
                   <div className="flex items-start gap-4">
-                    <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl flex-shrink-0">
+                    <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl shrink-0">
                       <svg fill="currentColor" viewBox="0 0 24 24" className="w-6 h-6">
                         <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.513 2.262 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.665.989 3.3 1.48 4.967 1.48 5.432 0 9.85-4.414 9.853-9.843.002-2.63-1.023-5.102-2.886-6.968C16.71 1.96 14.238.937 11.606.936c-5.437 0-9.857 4.417-9.86 9.848-.001 1.777.472 3.4 1.408 4.981L2.2 21.058l4.447-1.904zm12.302-7.854c-.3-.15-1.771-.875-2.046-.975-.276-.102-.476-.152-.676.152-.2.3-.776.976-.951 1.177-.176.2-.351.224-.651.075-1.203-.602-1.961-1.03-2.735-2.355-.195-.333.195-.31.558-1.033.06-.12.03-.225-.015-.326-.045-.1-.476-1.147-.651-1.572-.171-.41-.358-.353-.49-.36-.126-.007-.272-.008-.418-.008a.8.8 0 00-.58.272c-.2.2-.763.745-.763 1.817 0 1.072.78 2.106.89 2.257.11.15 1.533 2.34 3.714 3.28.518.224.922.358 1.238.459.52.165.994.142 1.368.086.417-.06 1.77-.723 2.021-1.42.25-.697.25-1.297.175-1.422-.075-.125-.275-.2-.575-.35z" />
                       </svg>
@@ -352,7 +352,7 @@ export default function ContactApp() {
 
                   {/* Instagram Detail */}
                   <div className="flex items-start gap-4">
-                    <div className="p-3 bg-pink-50 text-pink-600 rounded-2xl flex-shrink-0">
+                    <div className="p-3 bg-pink-50 text-pink-600 rounded-2xl shrink-0">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
                         <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
                         <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
@@ -375,7 +375,7 @@ export default function ContactApp() {
 
                   {/* Email Detail */}
                   <div className="flex items-start gap-4">
-                    <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl flex-shrink-0">
+                    <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl shrink-0">
                       <Mail className="w-6 h-6" />
                     </div>
                     <div>
@@ -394,7 +394,7 @@ export default function ContactApp() {
 
               {/* Clock Detail inside first card */}
               <div className="flex items-start gap-4 pt-6 border-t border-slate-100 mt-auto">
-                <div className="p-3 bg-slate-50 text-slate-600 rounded-2xl flex-shrink-0">
+                <div className="p-3 bg-slate-50 text-slate-600 rounded-2xl shrink-0">
                   <Clock className="w-6 h-6" />
                 </div>
                 <div>
@@ -408,7 +408,7 @@ export default function ContactApp() {
             </div>
 
             {/* RIGHT CARD: OFFICE LOCATION */}
-            <div className="bg-[#0B1F4D] text-white p-8 md:p-10 rounded-3xl border border-white/5 shadow-2xl relative overflow-hidden flex flex-col justify-between min-h-[350px]">
+            <div className="bg-[#0B1F4D] text-white p-8 md:p-10 rounded-3xl border border-white/5 shadow-2xl relative overflow-hidden flex flex-col justify-between min-h-87.5">
               <div className="absolute top-1/2 right-0 -translate-y-1/2 w-64 h-64 bg-[#0F4CFF]/15 blur-[50px] rounded-full pointer-events-none" />
               <div>
                 <h3 className="text-2xl font-black text-white border-b border-white/10 pb-4 mb-6 flex items-center gap-2">

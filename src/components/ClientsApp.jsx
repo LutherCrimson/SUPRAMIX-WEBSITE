@@ -117,13 +117,13 @@ export default function ClientsApp() {
       {/* STICKY LUXURY HEADER */}
       <header className={`fixed top-0 left-0 w-full z-40 transition-all duration-500 bg-[#0D1A3B]/95 backdrop-blur-md border-b border-white/10 ${scrolled ? 'py-2 shadow-md shadow-black/20' : 'py-3.5'
         }`}>
-        <div className="max-w-[1500px] mx-auto px-6 flex flex-col gap-3">
+        <div className="max-w-375 mx-auto px-6 flex flex-col gap-3">
 
           {/* Row 1: Logo and Desktop Navigation */}
           <div className="flex items-center justify-between gap-6">
 
             {/* Logo */}
-            <a href="/" className="flex items-center gap-1 group flex-shrink-0 cursor-pointer">
+            <a href="/" className="flex items-center gap-1 group shrink-0 cursor-pointer">
               <img
                 src={logoImg?.src || logoImg}
                 alt="SUPRAMIX Logo"
@@ -173,20 +173,20 @@ export default function ClientsApp() {
                 >
                   {item.name}
                   {item.link === '/clients' && (
-                    <span className="absolute bottom-0 left-0 w-full h-[2px] bg-[#0F4CFF]" />
+                    <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#0F4CFF]" />
                   )}
                 </a>
               ))}
             </div>
 
             {/* Right Action Buttons */}
-            <div className="hidden lg:flex items-center gap-3 xl:gap-4 flex-shrink-0">
+            <div className="hidden lg:flex items-center gap-3 xl:gap-4 shrink-0">
               {/* Language toggle */}
               <div
                 className="flex items-center gap-2 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 px-3 py-1.5 rounded-xl cursor-pointer transition-colors text-white text-xs font-black select-none"
                 onClick={() => triggerNotification("Language is set to English (UK)")}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 30" className="w-5 h-3 object-cover rounded-[2px] shadow-sm flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 30" className="w-5 h-3 object-cover rounded-xs shadow-sm shrink-0">
                   <rect width="50" height="30" fill="#012169" />
                   <path d="M0 0l50 30M50 0L0 30" stroke="#fff" strokeWidth="6" />
                   <path d="M0 0l50 30M50 0L0 30" stroke="#C8102E" strokeWidth="4" />
@@ -267,8 +267,8 @@ export default function ClientsApp() {
             alt="Supramix Project Portfolio"
             className="w-full h-full object-cover object-center opacity-30 transform scale-105"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#070D1F]/90 via-[#0B1F4D]/80 to-[#FAFBFD]" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0F4CFF]/15 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-b from-[#070D1F]/90 via-[#0B1F4D]/80 to-[#FAFBFD]" />
+          <div className="absolute inset-0 bg-linear-to-r from-[#0F4CFF]/15 to-transparent" />
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-6 text-center text-white flex flex-col items-center">
@@ -281,7 +281,7 @@ export default function ClientsApp() {
           </div>
 
           <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-none mb-6 max-w-4xl">
-            Our <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#0F4CFF] via-[#4E7DFF] to-white">Prestigious</span> Clients
+            Our <span className="bg-clip-text text-transparent bg-linear-to-r from-[#0F4CFF] via-[#4E7DFF] to-white">Prestigious</span> Clients
           </h1>
 
           <p className="text-base md:text-lg text-slate-300 max-w-2xl leading-relaxed">
@@ -313,7 +313,7 @@ export default function ClientsApp() {
               >
                 <div>
                   <div className="flex items-start justify-between gap-4 mb-6">
-                    <div className="w-14 h-14 rounded-2xl overflow-hidden border border-slate-100 shadow-sm bg-slate-50 flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
+                    <div className="w-14 h-14 rounded-2xl overflow-hidden border border-slate-100 shadow-sm bg-slate-50 shrink-0 group-hover:scale-105 transition-transform duration-300">
                       <img
                         src={client.logo}
                         alt={client.name}
@@ -342,7 +342,7 @@ export default function ClientsApp() {
                       <ul className="space-y-2">
                         {client.projects.map((proj, pIdx) => (
                           <li key={pIdx} className="flex items-start text-sm text-slate-600">
-                            <div className="w-1.5 h-1.5 rounded-full bg-[#0F4CFF] mr-2.5 mt-2 flex-shrink-0" />
+                            <div className="w-1.5 h-1.5 rounded-full bg-[#0F4CFF] mr-2.5 mt-2 shrink-0" />
                             <span>{proj}</span>
                           </li>
                         ))}
@@ -496,7 +496,7 @@ export default function ClientsApp() {
                 alt={selectedClient.name}
                 className="w-full h-full object-cover transform hover:scale-105 transition-all duration-700 opacity-95"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-linear-to-t from-slate-950/85 via-transparent to-transparent" />
 
               <div className="absolute bottom-4 left-6 right-6 text-white flex justify-between items-end">
                 <div>
@@ -523,7 +523,7 @@ export default function ClientsApp() {
                     <button
                       key={iIdx}
                       onClick={() => setActiveImgIdx(iIdx)}
-                      className={`relative w-20 h-14 rounded-xl overflow-hidden flex-shrink-0 border-2 transition-all cursor-pointer ${activeImgIdx === iIdx
+                      className={`relative w-20 h-14 rounded-xl overflow-hidden shrink-0 border-2 transition-all cursor-pointer ${activeImgIdx === iIdx
                         ? 'border-[#0F4CFF] ring-2 ring-[#0F4CFF]/30 scale-105 shadow-md'
                         : 'border-slate-200 opacity-70 hover:opacity-100'
                         }`}

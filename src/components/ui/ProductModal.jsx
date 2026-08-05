@@ -35,7 +35,7 @@ export const ProductModal = ({ product, isOpen, onClose }) => {
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6"
+          className="fixed inset-0 z-9999 flex items-center justify-center p-4 sm:p-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -60,7 +60,7 @@ export const ProductModal = ({ product, isOpen, onClose }) => {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Glow Effect */}
-            <div className="absolute -top-px -left-px -right-px h-px bg-gradient-to-r from-transparent via-brand-accent/30 to-transparent" />
+            <div className="absolute -top-px -left-px -right-px h-px bg-linear-to-r from-transparent via-brand-accent/30 to-transparent" />
 
             {/* Close Button */}
             <button
@@ -81,7 +81,7 @@ export const ProductModal = ({ product, isOpen, onClose }) => {
                   onError={() => setImageError(true)}
                 />
                 {/* Gradient overlay at bottom for smooth transition */}
-                <div className="absolute inset-0 bg-gradient-to-t from-brand-navy/80 via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-linear-to-t from-brand-navy/80 via-transparent to-transparent" />
                 {/* Category badge on image */}
                 <div className="absolute bottom-4 left-6 flex items-center gap-3">
                   <div className="bg-white/90 backdrop-blur-md w-12 h-12 rounded-xl flex items-center justify-center border border-brand-border">
@@ -102,7 +102,7 @@ export const ProductModal = ({ product, isOpen, onClose }) => {
                 {/* Fallback: no image or image error — show header without image */}
                 <div className="p-8 pb-0">
                   <div className="flex items-start gap-5">
-                    <div className="bg-brand-bg-light w-16 h-16 rounded-2xl flex items-center justify-center border border-brand-border flex-shrink-0">
+                    <div className="bg-brand-bg-light w-16 h-16 rounded-2xl flex items-center justify-center border border-brand-border shrink-0">
                       {product.icon}
                     </div>
                     <div className="flex-1 pr-8">
@@ -140,7 +140,7 @@ export const ProductModal = ({ product, isOpen, onClose }) => {
                       transition={{ delay: 0.1 + idx * 0.05 }}
                       className="flex items-center gap-3 bg-brand-bg-light border border-brand-border rounded-xl px-4 py-3"
                     >
-                      <div className="w-2 h-2 rounded-full bg-brand-accent flex-shrink-0" />
+                      <div className="w-2 h-2 rounded-full bg-brand-accent shrink-0" />
                       <span className="text-sm text-brand-muted">{feature}</span>
                     </motion.div>
                   ))}
@@ -210,7 +210,7 @@ export const ProductModal = ({ product, isOpen, onClose }) => {
             </div>
 
             {/* Bottom Glow */}
-            <div className="absolute -bottom-px -left-px -right-px h-px bg-gradient-to-r from-transparent via-brand-accent/30 to-transparent" />
+            <div className="absolute -bottom-px -left-px -right-px h-px bg-linear-to-r from-transparent via-brand-accent/30 to-transparent" />
           </motion.div>
         </motion.div>
       )}

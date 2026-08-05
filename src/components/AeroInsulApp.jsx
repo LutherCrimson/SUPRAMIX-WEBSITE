@@ -402,7 +402,7 @@ export default function App() {
       {/* STICKY LUXURY HEADER (Rockal / Supramix Style) */}
       <header className={`fixed top-0 left-0 w-full z-40 transition-all duration-500 bg-[#0D1A3B]/95 backdrop-blur-md border-b border-white/10 ${scrolled ? 'py-2 shadow-md shadow-black/20' : 'py-3.5'
         }`}>
-        <div className="max-w-[1500px] mx-auto px-6 flex flex-col gap-3">
+        <div className="max-w-375 mx-auto px-6 flex flex-col gap-3">
 
           {/* Row 1: Logo and Desktop Navigation */}
           <div className="flex items-center justify-between gap-6">
@@ -414,7 +414,7 @@ export default function App() {
                 e.preventDefault();
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="flex items-center gap-1 group flex-shrink-0 cursor-pointer"
+              className="flex items-center gap-1 group shrink-0 cursor-pointer"
             >
               <img
                 src={logoImg?.src || logoImg}
@@ -480,7 +480,7 @@ export default function App() {
                   >
                     {item.name}
                     {isItemActive && (
-                      <span className="absolute bottom-0 left-0 w-full h-[2px] bg-[#0F4CFF]" />
+                      <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#0F4CFF]" />
                     )}
                   </a>
                 );
@@ -488,13 +488,13 @@ export default function App() {
             </div>
 
             {/* Right Action Buttons */}
-            <div className="hidden lg:flex items-center gap-3 xl:gap-4 flex-shrink-0">
+            <div className="hidden lg:flex items-center gap-3 xl:gap-4 shrink-0">
               {/* Language toggle matching user image */}
               <div
                 className="flex items-center gap-2 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 px-3 py-1.5 rounded-xl cursor-pointer transition-colors text-white text-xs font-black select-none"
                 onClick={() => triggerNotification("Language is set to English (UK)")}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 30" className="w-5 h-3 object-cover rounded-[2px] shadow-sm flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 30" className="w-5 h-3 object-cover rounded-xs shadow-sm shrink-0">
                   <rect width="50" height="30" fill="#012169" />
                   <path d="M0 0l50 30M50 0L0 30" stroke="#fff" strokeWidth="6" />
                   <path d="M0 0l50 30M50 0L0 30" stroke="#C8102E" strokeWidth="4" />
@@ -629,7 +629,7 @@ export default function App() {
                   setMobileMenuOpen(false);
                 }}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 30" className="w-5 h-3 object-cover rounded-[2px] shadow-sm flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 30" className="w-5 h-3 object-cover rounded-xs shadow-sm shrink-0">
                   <rect width="50" height="30" fill="#012169" />
                   <path d="M0 0l50 30M50 0L0 30" stroke="#fff" strokeWidth="6" />
                   <path d="M0 0l50 30M50 0L0 30" stroke="#C8102E" strokeWidth="4" />
@@ -683,7 +683,7 @@ export default function App() {
                       setCartOpen(false);
                       window.location.hash = '#products';
                     }}
-                    className="px-6 py-2.5 bg-gradient-to-r from-[#0F4CFF] to-[#4E7DFF] text-white text-xs font-bold rounded-full"
+                    className="px-6 py-2.5 bg-linear-to-r from-[#0F4CFF] to-[#4E7DFF] text-white text-xs font-bold rounded-full"
                   >
                     Browse Materials
                   </button>
@@ -766,13 +766,13 @@ export default function App() {
             onError={(e) => { e.currentTarget.src = '/Projects/kesehatan3.jpeg'; }}
           />
           {/* Gradient Overlays for Cinematic Atmosphere */}
-          <div className="absolute inset-0 bg-gradient-to-b from-[#070D1F]/90 via-[#0B1F4D]/70 to-[#070D1F]" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0F4CFF]/10 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-b from-[#070D1F]/90 via-[#0B1F4D]/70 to-[#070D1F]" />
+          <div className="absolute inset-0 bg-linear-to-r from-[#0F4CFF]/10 to-transparent" />
         </div>
 
         {/* Dynamic Glowing Mouse Follower (Simulates Custom Dynamic Depth) */}
         <div
-          className="absolute top-0 left-0 pointer-events-none w-[600px] h-[600px] rounded-full bg-[#0F4CFF]/15 blur-[120px] mix-blend-screen transition-transform duration-300 ease-out z-0 hidden md:block"
+          className="absolute top-0 left-0 pointer-events-none w-150 h-150 rounded-full bg-[#0F4CFF]/15 blur-[120px] mix-blend-screen transition-transform duration-300 ease-out z-0 hidden md:block"
           style={{
             transform: `translate(${mousePos.x - 300}px, ${mousePos.y - 300}px)`,
           }}
@@ -792,7 +792,7 @@ export default function App() {
 
           {/* High-Impact Headline */}
           <h1 className="text-4xl md:text-6xl lg:text-8xl font-black tracking-tight leading-none mb-6 max-w-5xl">
-            Waterproofing <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#0F4CFF] via-[#4E7DFF] to-white">Solution</span> <br />
+            Waterproofing <span className="bg-clip-text text-transparent bg-linear-to-r from-[#0F4CFF] via-[#4E7DFF] to-white">Solution</span> <br />
             For A Better Home.
           </h1>
 
@@ -805,7 +805,7 @@ export default function App() {
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
             <a
               href="#products"
-              className="px-8 py-4 w-full sm:w-auto rounded-full text-sm font-bold bg-gradient-to-r from-[#0F4CFF] to-[#4E7DFF] hover:shadow-2xl hover:shadow-blue-500/50 hover:scale-105 active:scale-95 transition-all duration-300 tracking-wider flex items-center justify-center gap-2"
+              className="px-8 py-4 w-full sm:w-auto rounded-full text-sm font-bold bg-linear-to-r from-[#0F4CFF] to-[#4E7DFF] hover:shadow-2xl hover:shadow-blue-500/50 hover:scale-105 active:scale-95 transition-all duration-300 tracking-wider flex items-center justify-center gap-2"
             >
               Shop Materials
               <Icon name="arrowRight" className="w-4 h-4" />
@@ -824,7 +824,7 @@ export default function App() {
 
         {/* Elegant Bottom Transition Wave */}
         <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-none transform translate-y-1">
-          <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="relative block w-full h-[60px] fill-[#FAFBFD]">
+          <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="relative block w-full h-15 fill-[#FAFBFD]">
             <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V0C26.9,8.75,57.05,18.3,91.33,26.49,173.39,46,258,68.21,321.39,56.44Z" />
           </svg>
         </div>
@@ -864,14 +864,14 @@ export default function App() {
               </div>
             </div>
 
-            <div className="relative rounded-3xl overflow-hidden shadow-2xl h-full min-h-[420px] group border border-slate-200">
+            <div className="relative rounded-3xl overflow-hidden shadow-2xl h-full min-h-105 group border border-slate-200">
               <img
                 src={aboutData.image_url || '/products/app-sand-membrane.jpg'}
                 alt={aboutData.image_caption || 'Bitumen Waterproofing Membrane Application'}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 onError={(e) => { e.currentTarget.src = '/Projects/kesehatan1.jpeg'; }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0B1F4D]/80 via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-linear-to-t from-[#0B1F4D]/80 via-transparent to-transparent" />
               <div className="absolute bottom-6 left-6 right-6 text-white bg-slate-900/60 backdrop-blur-md p-4 rounded-2xl border border-white/10">
                 <p className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-1">
                   {aboutData.image_badge || 'Building Structure Application'}
@@ -903,7 +903,7 @@ export default function App() {
             <div className="bg-white border border-slate-200/80 rounded-3xl p-8 md:p-10 shadow-lg shadow-slate-200/50 hover:shadow-2xl hover:border-blue-500/30 transition-all duration-300 flex flex-col justify-between h-full group">
               <div>
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-14 h-14 rounded-2xl bg-[#070D1F] border border-blue-500/30 p-2.5 flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform flex-shrink-0">
+                  <div className="w-14 h-14 rounded-2xl bg-[#070D1F] border border-blue-500/30 p-2.5 flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform shrink-0">
                     <img src={logoImg?.src || logoImg} alt="SUPRAMIX Logo" className="w-full h-full object-contain" />
                   </div>
                   <div>
@@ -919,15 +919,15 @@ export default function App() {
 
               <div className="pt-6 border-t border-slate-100 space-y-3">
                 <div className="flex items-center gap-3 text-base font-semibold text-slate-800">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
                   <span>Curated Premium Bituminous Standards</span>
                 </div>
                 <div className="flex items-center gap-3 text-base font-semibold text-slate-800">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
                   <span>Nationwide Island Distribution Network</span>
                 </div>
                 <div className="flex items-center gap-3 text-base font-semibold text-slate-800">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
                   <span>Sustainable Structural Protection</span>
                 </div>
               </div>
@@ -937,7 +937,7 @@ export default function App() {
             <div className="bg-white border border-slate-200/80 rounded-3xl p-8 md:p-10 shadow-lg shadow-slate-200/50 hover:shadow-2xl hover:border-blue-500/30 transition-all duration-300 flex flex-col justify-between h-full group">
               <div>
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-14 h-14 rounded-2xl bg-[#070D1F] border border-blue-500/30 p-2.5 flex items-center justify-center shadow-lg shadow-slate-900/20 group-hover:scale-110 transition-transform flex-shrink-0">
+                  <div className="w-14 h-14 rounded-2xl bg-[#070D1F] border border-blue-500/30 p-2.5 flex items-center justify-center shadow-lg shadow-slate-900/20 group-hover:scale-110 transition-transform shrink-0">
                     <img src={logoImg?.src || logoImg} alt="SUPRAMIX Logo" className="w-full h-full object-contain" />
                   </div>
                   <div>
@@ -953,15 +953,15 @@ export default function App() {
 
               <div className="pt-6 border-t border-slate-100 space-y-3">
                 <div className="flex items-center gap-3 text-base font-semibold text-slate-800">
-                  <span className="w-2.5 h-2.5 rounded-full bg-blue-500 flex-shrink-0" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0" />
                   <span>Onsite & Offsite Stakeholder Training</span>
                 </div>
                 <div className="flex items-center gap-3 text-base font-semibold text-slate-800">
-                  <span className="w-2.5 h-2.5 rounded-full bg-blue-500 flex-shrink-0" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0" />
                   <span>Expert Technical Application Support</span>
                 </div>
                 <div className="flex items-center gap-3 text-base font-semibold text-slate-800">
-                  <span className="w-2.5 h-2.5 rounded-full bg-blue-500 flex-shrink-0" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0" />
                   <span>Comprehensive Online Knowledge Base</span>
                 </div>
               </div>
@@ -1040,19 +1040,11 @@ export default function App() {
                         <span className="text-slate-500 text-xs font-medium">({product.reviews} reviews)</span>
                       </div>
 
-                      <h3 className="font-extrabold text-slate-900 group-hover:text-[#0F4CFF] transition-colors text-[#0B1F4D] text-lg mb-2 leading-snug">
-                        {product.name}
-                      </h3>
-
-                      <p className="text-base text-slate-700 leading-relaxed font-medium line-clamp-3 mb-4">
-                        {product.desc}
-                      </p>
-
                       {/* Features list bullet pointers */}
                       <div className="space-y-1.5 mb-6">
                         {product.features.map((feat, i) => (
                           <div key={i} className="flex items-center gap-2 text-xs font-semibold text-slate-700">
-                            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full flex-shrink-0" />
+                            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full shrink-0" />
                             <span>{feat}</span>
                           </div>
                         ))}
@@ -1194,7 +1186,7 @@ export default function App() {
             </button>
 
             {/* Left Column: Image */}
-            <div className="w-full md:w-1/2 h-64 md:h-auto bg-slate-100 relative min-h-[250px] md:min-h-[400px] flex-shrink-0">
+            <div className="w-full md:w-1/2 h-64 md:h-auto bg-slate-100 relative min-h-62.5 md:min-h-100 shrink-0">
               <img
                 src={selectedProduct.image}
                 alt={selectedProduct.name}
@@ -1233,7 +1225,7 @@ export default function App() {
                       if (trimmed.startsWith('#')) {
                         const headerText = trimmed.replace(/^#+\s*/, '').replace(/\*\*/g, '');
                         return (
-                          <h4 key={idx} className="font-bold text-slate-900 text-[#0B1F4D] text-sm mt-3 mb-1 uppercase tracking-wider">
+                          <h4 key={idx} className="font-bold text-[#0B1F4D] text-sm mt-3 mb-1 uppercase tracking-wider">
                             {headerText}
                           </h4>
                         );
@@ -1264,7 +1256,7 @@ export default function App() {
                     <div className="grid grid-cols-1 gap-2">
                       {selectedProduct.features.map((feat, i) => (
                         <div key={i} className="flex items-center gap-2 text-xs text-slate-700">
-                          <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full flex-shrink-0" />
+                          <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full shrink-0" />
                           <span>{feat}</span>
                         </div>
                       ))}
