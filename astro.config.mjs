@@ -19,12 +19,8 @@ customLogger.warn = (msg, options) => {
   originalWarn(msg, options);
 };
 
-// https://astro.build/config
 export default defineConfig({
-  output: 'server', // Pastikan output di-set ke server
-  adapter: node({
-    mode: 'standalone' // Harus 'standalone' agar menghasilkan dist/server/entry.mjs
-  }),
+  output: 'static',
   server: {
     host: '0.0.0.0'
   },

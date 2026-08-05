@@ -32,11 +32,11 @@ export default function ProjectsApp() {
 
   return (
     <div className="min-h-screen bg-[#070D1F] text-slate-100 font-sans antialiased selection:bg-[#0F4CFF] selection:text-white">
-      
+
       {/* NAVBAR */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-[#070D1F]/90 backdrop-blur-xl border-b border-white/10">
         <div className="max-w-[1500px] mx-auto px-6 h-20 flex items-center justify-between gap-6">
-          
+
           {/* Logo */}
           <a href="/" className="flex items-center gap-1 group flex-shrink-0 cursor-pointer">
             <img
@@ -68,9 +68,8 @@ export default function ProjectsApp() {
               <a
                 key={idx}
                 href={item.link}
-                className={`hover:text-white transition-colors py-1.5 relative whitespace-nowrap ${
-                  item.link === '/projects' ? 'text-white font-extrabold' : 'text-slate-300'
-                }`}
+                className={`hover:text-white transition-colors py-1.5 relative whitespace-nowrap ${item.link === '/projects' ? 'text-white font-extrabold' : 'text-slate-300'
+                  }`}
               >
                 {item.name}
                 {item.link === '/projects' && (
@@ -137,7 +136,7 @@ export default function ProjectsApp() {
       {/* HERO SECTION */}
       <section className="pt-32 pb-20 px-6 relative overflow-hidden bg-gradient-to-b from-[#0B152C] via-[#070D1F] to-[#070D1F]">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-[#0F4CFF]/15 blur-[120px] rounded-full pointer-events-none" />
-        
+
         <div className="max-w-6xl mx-auto text-center relative z-10 space-y-6">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md mb-2">
             <Building2 className="w-4 h-4 text-[#0F4CFF]" />
@@ -171,11 +170,10 @@ export default function ProjectsApp() {
                 <button
                   key={idx}
                   onClick={() => setActiveCategory(cat)}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    activeCategory === cat
-                      ? 'bg-[#0F4CFF] text-white shadow-lg shadow-blue-500/25'
-                      : 'bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10'
-                  }`}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${activeCategory === cat
+                    ? 'bg-[#0F4CFF] text-white shadow-lg shadow-blue-500/25'
+                    : 'bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10'
+                    }`}
                 >
                   {cat}
                 </button>
@@ -188,7 +186,7 @@ export default function ProjectsApp() {
       {/* PROJECTS GRID SECTION */}
       <section className="py-16 px-6 bg-[#FAFBFD] text-slate-900 rounded-t-[40px]">
         <div className="max-w-6xl mx-auto">
-          
+
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-10 pb-6 border-b border-slate-200">
             <div>
               <h2 className="text-2xl sm:text-3xl font-black text-[#0B1F4D]">Daftar Proyek Konstruksi</h2>
