@@ -1,8 +1,6 @@
 // src/pages/api/admin/products.js
 import { supabaseServer, isServerSupabaseConfigured } from '../../../utils/supabaseServer';
 
-export const prerender = false;
-
 export async function GET() {
   if (!isServerSupabaseConfigured()) {
     return new Response(JSON.stringify({ success: false, error: 'Supabase server is not configured' }), {
