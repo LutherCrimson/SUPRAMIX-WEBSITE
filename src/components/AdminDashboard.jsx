@@ -986,7 +986,7 @@ export default function AdminDashboard() {
                       placeholder="/products/app-sand-membrane.jpg atau https://..."
                       className="flex-1 bg-[#070D1F] border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-[#0F4CFF]"
                     />
-                    <label className="bg-white/10 hover:bg-white/20 text-white font-semibold px-3 py-2.5 rounded-xl cursor-pointer transition-colors flex items-center gap-1 flex-shrink-0">
+                    <label className="bg-white/10 hover:bg-white/20 text-white font-semibold px-3 py-2.5 rounded-xl cursor-pointer transition-colors flex items-center gap-1 shrink-0">
                       <Upload className="w-4 h-4" />
                       <span>Upload</span>
                       <input
@@ -1075,7 +1075,7 @@ export default function AdminDashboard() {
                     className="w-full h-full object-cover"
                     onError={(e) => { e.currentTarget.src = '/Projects/kesehatan1.jpeg'; }}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0B1F4D]/80 via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-linear-to-t from-[#0B1F4D]/80 via-transparent to-transparent" />
                   <div className="absolute bottom-3 left-3 right-3 text-white bg-slate-900/70 backdrop-blur-sm p-2 rounded-lg text-[10px]">
                     <p className="font-bold text-blue-400 uppercase tracking-wider text-[8px]">{aboutForm.image_badge || 'Badge'}</p>
                     <p className="font-medium text-white truncate">{aboutForm.image_caption || 'Caption'}</p>
@@ -1125,14 +1125,14 @@ export default function AdminDashboard() {
                   </p>
                 </div>
 
-                <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                <label className="relative inline-flex items-center cursor-pointer shrink-0">
                   <input
                     type="checkbox"
                     checked={!!maintenanceForm.enabled}
                     onChange={(e) => setMaintenanceForm({ ...maintenanceForm, enabled: e.target.checked })}
                     className="sr-only peer"
                   />
-                  <div className="w-14 h-7 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-amber-500"></div>
+                  <div className="w-14 h-7 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-slate-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-amber-500"></div>
                 </label>
               </div>
 
@@ -1323,7 +1323,7 @@ export default function AdminDashboard() {
                       placeholder="Upload file atau paste URL"
                       className="w-full bg-[#070D1F] border border-white/10 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-[#0F4CFF]"
                     />
-                    <label className="bg-[#0F4CFF]/20 hover:bg-[#0F4CFF]/30 border border-[#0F4CFF]/40 text-[#0F4CFF] px-3.5 py-2.5 rounded-xl cursor-pointer font-bold text-xs flex items-center gap-1.5 flex-shrink-0">
+                    <label className="bg-[#0F4CFF]/20 hover:bg-[#0F4CFF]/30 border border-[#0F4CFF]/40 text-[#0F4CFF] px-3.5 py-2.5 rounded-xl cursor-pointer font-bold text-xs flex items-center gap-1.5 shrink-0">
                       <Upload className="w-4 h-4" />
                       Upload
                       <input
@@ -1454,7 +1454,7 @@ export default function AdminDashboard() {
                       placeholder="Upload file atau paste URL"
                       className="w-full bg-[#070D1F] border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-[#0F4CFF]"
                     />
-                    <label className="bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-400 px-3.5 py-2.5 rounded-xl cursor-pointer font-bold text-xs flex items-center gap-1.5 flex-shrink-0">
+                    <label className="bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-400 px-3.5 py-2.5 rounded-xl cursor-pointer font-bold text-xs flex items-center gap-1.5 shrink-0">
                       <Upload className="w-4 h-4" />
                       Upload
                       <input
@@ -1564,7 +1564,7 @@ export default function AdminDashboard() {
                       placeholder="Upload file atau paste URL"
                       className="w-full bg-[#070D1F] border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-[#0F4CFF]"
                     />
-                    <label className="bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/40 text-blue-400 px-3.5 py-2.5 rounded-xl cursor-pointer font-bold text-xs flex items-center gap-1.5 flex-shrink-0">
+                    <label className="bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/40 text-blue-400 px-3.5 py-2.5 rounded-xl cursor-pointer font-bold text-xs flex items-center gap-1.5 shrink-0">
                       <Upload className="w-4 h-4" />
                       Upload
                       <input
