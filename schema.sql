@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS public.products (
   unit TEXT,
   rating NUMERIC DEFAULT 5.0,
   reviews INTEGER DEFAULT 0,
-  desc TEXT,
+  "desc" TEXT,
   features JSONB DEFAULT '[]'::jsonb,
   image TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS public.projects (
   materials_used TEXT,
   location TEXT,
   year TEXT,
-  desc TEXT,
+  "desc" TEXT,
   image TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS public.site_settings (
 );
 
 -- ==========================================
--- ENABLE ROW LEVEL SECURITY (RLS) & PUBLIC READ POLICIES
+-- ENABLE ROW LEVEL SECURITY (RLS) & PUBLIC ACCESS POLICIES
 -- ==========================================
 
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
@@ -85,34 +85,9 @@ ALTER TABLE public.about_section ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.admin_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
 
--- Allow Public Read Access for All Tables
+-- Allow Public & Anonymous Read/Write Access
 DO $$ 
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public Read Products') THEN
-    CREATE POLICY "Public Read Products" ON public.products FOR SELECT USING (true);
-  END IF;
-  
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public Read Projects') THEN
-    CREATE POLICY "Public Read Projects" ON public.projects FOR SELECT USING (true);
-  END IF;
-
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public Read Partners') THEN
-    CREATE POLICY "Public Read Partners" ON public.partners FOR SELECT USING (true);
-  END IF;
-
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public Read About') THEN
-    CREATE POLICY "Public Read About" ON public.about_section FOR SELECT USING (true);
-  END IF;
-
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public Read Admin Settings') THEN
-    CREATE POLICY "Public Read Admin Settings" ON public.admin_settings FOR SELECT USING (true);
-  END IF;
-
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public Read Site Settings') THEN
-    CREATE POLICY "Public Read Site Settings" ON public.site_settings FOR SELECT USING (true);
-  END IF;
-
-  -- Allow Full Access for Anonymous/All Role (Client-side & Server-side Operations)
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow All Products Ops') THEN
     CREATE POLICY "Allow All Products Ops" ON public.products FOR ALL USING (true) WITH CHECK (true);
   END IF;
