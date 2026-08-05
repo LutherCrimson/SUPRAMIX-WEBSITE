@@ -1,7 +1,7 @@
 // src/pages/api/admin/projects.js
 import { supabaseServer, isServerSupabaseConfigured } from '../../../utils/supabaseServer';
 
-// export const prerender = false;
+export const prerender = false;
 
 export async function GET() {
   if (!isServerSupabaseConfigured()) {

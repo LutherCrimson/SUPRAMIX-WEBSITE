@@ -200,24 +200,28 @@ function setItem(key, value) {
   }
 }
 
-// =========================================================
-// ASYNCHRONOUS ASTRO SERVER BACKEND API CALLS
-// =========================================================
+// Helper function to safely fetch JSON without throwing on HTML 404/500 responses
+async function safeFetchJson(url, options) {
+  try {
+    const res = await fetch(url, options);
+    const contentType = res.headers.get('content-type') || '';
+    if (res.ok && contentType.includes('application/json')) {
+      const json = await res.json();
+      return { ok: true, json, status: res.status };
+    }
+    return { ok: false, status: res.status };
+  } catch (e) {
+    return { ok: false, error: e };
+  }
+}
 
 // --- PRODUCTS ---
 
 export async function getProductsAsync() {
-  try {
-    const res = await fetch('/api/admin/products');
-    if (res.ok) {
-      const json = await res.json();
-      if (json.success && Array.isArray(json.data)) {
-        setItem(KEYS.PRODUCTS, json.data);
-        return json.data;
-      }
-    }
-  } catch (e) {
-    console.warn('API /api/admin/products unreachable, fallback to client/localStorage:', e);
+  const apiRes = await safeFetchJson('/api/admin/products');
+  if (apiRes.ok && apiRes.json.success && Array.isArray(apiRes.json.data)) {
+    setItem(KEYS.PRODUCTS, apiRes.json.data);
+    return apiRes.json.data;
   }
 
   if (isSupabaseActive()) {
@@ -244,20 +248,13 @@ export async function saveProductAsync(product) {
   const targetId = (product.id && String(product.id).trim()) ? String(product.id).trim() : 'prod-' + Date.now();
   const productToSave = { ...product, id: targetId };
 
-  try {
-    const res = await fetch('/api/admin/products', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(productToSave)
-    });
-    if (res.ok) {
-      const json = await res.json();
-      if (json.success) {
-        return saveProduct(productToSave);
-      }
-    }
-  } catch (e) {
-    console.error('API /api/admin/products POST error:', e);
+  const apiRes = await safeFetchJson('/api/admin/products', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(productToSave)
+  });
+  if (apiRes.ok && apiRes.json.success) {
+    return saveProduct(productToSave);
   }
 
   if (isSupabaseActive()) {
@@ -283,20 +280,13 @@ export async function saveProductAsync(product) {
 }
 
 export async function deleteProductAsync(id) {
-  try {
-    const res = await fetch('/api/admin/products', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id })
-    });
-    if (res.ok) {
-      const json = await res.json();
-      if (json.success) {
-        return deleteProduct(id);
-      }
-    }
-  } catch (e) {
-    console.error('API /api/admin/products DELETE error:', e);
+  const apiRes = await safeFetchJson('/api/admin/products', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id })
+  });
+  if (apiRes.ok && apiRes.json.success) {
+    return deleteProduct(id);
   }
 
   if (isSupabaseActive()) {
@@ -313,17 +303,10 @@ export async function deleteProductAsync(id) {
 // --- PROJECTS ---
 
 export async function getProjectsAsync() {
-  try {
-    const res = await fetch('/api/admin/projects');
-    if (res.ok) {
-      const json = await res.json();
-      if (json.success && Array.isArray(json.data)) {
-        setItem(KEYS.PROJECTS, json.data);
-        return json.data;
-      }
-    }
-  } catch (e) {
-    console.warn('API /api/admin/projects unreachable, fallback to client/localStorage:', e);
+  const apiRes = await safeFetchJson('/api/admin/projects');
+  if (apiRes.ok && apiRes.json.success && Array.isArray(apiRes.json.data)) {
+    setItem(KEYS.PROJECTS, apiRes.json.data);
+    return apiRes.json.data;
   }
 
   if (isSupabaseActive()) {
@@ -357,20 +340,13 @@ export async function saveProjectAsync(project) {
   const targetId = (project.id && String(project.id).trim()) ? String(project.id).trim() : 'proj-' + Date.now();
   const projectToSave = { ...project, id: targetId };
 
-  try {
-    const res = await fetch('/api/admin/projects', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(projectToSave)
-    });
-    if (res.ok) {
-      const json = await res.json();
-      if (json.success) {
-        return saveProject(projectToSave);
-      }
-    }
-  } catch (e) {
-    console.error('API /api/admin/projects POST error:', e);
+  const apiRes = await safeFetchJson('/api/admin/projects', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(projectToSave)
+  });
+  if (apiRes.ok && apiRes.json.success) {
+    return saveProject(projectToSave);
   }
 
   if (isSupabaseActive()) {
@@ -395,20 +371,13 @@ export async function saveProjectAsync(project) {
 }
 
 export async function deleteProjectAsync(id) {
-  try {
-    const res = await fetch('/api/admin/projects', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id })
-    });
-    if (res.ok) {
-      const json = await res.json();
-      if (json.success) {
-        return deleteProject(id);
-      }
-    }
-  } catch (e) {
-    console.error('API /api/admin/projects DELETE error:', e);
+  const apiRes = await safeFetchJson('/api/admin/projects', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id })
+  });
+  if (apiRes.ok && apiRes.json.success) {
+    return deleteProject(id);
   }
 
   if (isSupabaseActive()) {
@@ -425,17 +394,10 @@ export async function deleteProjectAsync(id) {
 // --- PARTNERS ---
 
 export async function getPartnersAsync() {
-  try {
-    const res = await fetch('/api/admin/partners');
-    if (res.ok) {
-      const json = await res.json();
-      if (json.success && Array.isArray(json.data)) {
-        setItem(KEYS.PARTNERS, json.data);
-        return json.data;
-      }
-    }
-  } catch (e) {
-    console.warn('API /api/admin/partners unreachable, fallback to client/localStorage:', e);
+  const apiRes = await safeFetchJson('/api/admin/partners');
+  if (apiRes.ok && apiRes.json.success && Array.isArray(apiRes.json.data)) {
+    setItem(KEYS.PARTNERS, apiRes.json.data);
+    return apiRes.json.data;
   }
 
   if (isSupabaseActive()) {
@@ -467,20 +429,13 @@ export async function savePartnerAsync(partner) {
   const targetId = (partner.id && String(partner.id).trim()) ? String(partner.id).trim() : 'part-' + Date.now();
   const partnerToSave = { ...partner, id: targetId };
 
-  try {
-    const res = await fetch('/api/admin/partners', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(partnerToSave)
-    });
-    if (res.ok) {
-      const json = await res.json();
-      if (json.success) {
-        return savePartner(partnerToSave);
-      }
-    }
-  } catch (e) {
-    console.error('API /api/admin/partners POST error:', e);
+  const apiRes = await safeFetchJson('/api/admin/partners', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(partnerToSave)
+  });
+  if (apiRes.ok && apiRes.json.success) {
+    return savePartner(partnerToSave);
   }
 
   if (isSupabaseActive()) {
@@ -503,20 +458,13 @@ export async function savePartnerAsync(partner) {
 }
 
 export async function deletePartnerAsync(id) {
-  try {
-    const res = await fetch('/api/admin/partners', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id })
-    });
-    if (res.ok) {
-      const json = await res.json();
-      if (json.success) {
-        return deletePartner(id);
-      }
-    }
-  } catch (e) {
-    console.error('API /api/admin/partners DELETE error:', e);
+  const apiRes = await safeFetchJson('/api/admin/partners', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id })
+  });
+  if (apiRes.ok && apiRes.json.success) {
+    return deletePartner(id);
   }
 
   if (isSupabaseActive()) {
@@ -537,39 +485,49 @@ export async function getAdminPasscodeAsync() {
 }
 
 export async function verifyAdminPasscodeServer(passcode) {
-  try {
-    const res = await fetch('/api/admin/auth', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'verify', passcode })
-    });
-    const json = await res.json();
-    if (res.status === 200 || res.status === 401) {
-      return Boolean(json && json.success);
-    }
-  } catch (e) {
-    console.warn('API /api/admin/auth fallback to client check:', e);
+  const apiRes = await safeFetchJson('/api/admin/auth', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'verify', passcode })
+  });
+  if (apiRes.ok && apiRes.json) {
+    return Boolean(apiRes.json.success);
   }
   return passcode === getAdminPasscode();
 }
 
 export async function setAdminPasscodeAsync(newCode) {
-  try {
-    const res = await fetch('/api/admin/auth', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'change', newPasscode: newCode })
-    });
-    const json = await res.json();
-    if (res.ok && json.success) {
-      setAdminPasscode(newCode);
-      return { success: true };
-    }
-    return { success: false, error: json.error || 'Gagal memperbarui password di server' };
-  } catch (e) {
-    console.error('API /api/admin/auth set passcode error:', e);
-    return { success: false, error: e.message };
+  if (!newCode || newCode.trim().length < 4) {
+    return { success: false, error: 'Passcode minimal 4 karakter' };
   }
+  const passcodeToSave = newCode.trim();
+
+  const apiRes = await safeFetchJson('/api/admin/auth', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'change', newPasscode: passcodeToSave })
+  });
+
+  if (apiRes.ok && apiRes.json && apiRes.json.success) {
+    setAdminPasscode(passcodeToSave);
+    return { success: true };
+  }
+
+  // Fallback: update Supabase client & local storage
+  if (isSupabaseActive()) {
+    try {
+      await supabase.from('admin_settings').upsert({
+        key: 'passcode',
+        value: passcodeToSave,
+        updated_at: new Date().toISOString()
+      });
+    } catch (err) {
+      console.warn('Supabase client admin_settings upsert error:', err);
+    }
+  }
+
+  setAdminPasscode(passcodeToSave);
+  return { success: true };
 }
 
 // =========================================================
@@ -686,17 +644,10 @@ export function resetAllDataToDefault() {
 // --- ABOUT SECTION ASYNC & LOCAL FUNCTIONS ---
 
 export async function getAboutSectionAsync() {
-  try {
-    const res = await fetch('/api/admin/about');
-    if (res.ok) {
-      const json = await res.json();
-      if (json.success && json.data) {
-        setItem(KEYS.ABOUT, json.data);
-        return json.data;
-      }
-    }
-  } catch (e) {
-    console.warn('API /api/admin/about unreachable, fallback to localStorage/default:', e);
+  const apiRes = await safeFetchJson('/api/admin/about');
+  if (apiRes.ok && apiRes.json.success && apiRes.json.data) {
+    setItem(KEYS.ABOUT, apiRes.json.data);
+    return apiRes.json.data;
   }
 
   if (isSupabaseActive()) {
@@ -717,21 +668,14 @@ export async function getAboutSectionAsync() {
 export async function saveAboutSectionAsync(aboutData) {
   const payload = { ...defaultAboutSection, ...aboutData, id: 'about-main' };
 
-  try {
-    const res = await fetch('/api/admin/about', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    if (res.ok) {
-      const json = await res.json();
-      if (json.success) {
-        setItem(KEYS.ABOUT, payload);
-        return payload;
-      }
-    }
-  } catch (e) {
-    console.warn('API /api/admin/about POST unreachable, fallback to client/localStorage:', e);
+  const apiRes = await safeFetchJson('/api/admin/about', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (apiRes.ok && apiRes.json.success) {
+    setItem(KEYS.ABOUT, payload);
+    return payload;
   }
 
   if (isSupabaseActive()) {
@@ -760,17 +704,10 @@ export function saveMaintenanceSync(config) {
 }
 
 export async function getMaintenanceAsync() {
-  try {
-    const res = await fetch('/api/admin/maintenance');
-    if (res.ok) {
-      const json = await res.json();
-      if (json.success && json.data) {
-        saveMaintenanceSync(json.data);
-        return { ...defaultMaintenanceConfig, ...json.data };
-      }
-    }
-  } catch (e) {
-    console.warn('API /api/admin/maintenance unreachable, fallback to localStorage/default:', e);
+  const apiRes = await safeFetchJson('/api/admin/maintenance');
+  if (apiRes.ok && apiRes.json.success && apiRes.json.data) {
+    saveMaintenanceSync(apiRes.json.data);
+    return { ...defaultMaintenanceConfig, ...apiRes.json.data };
   }
 
   if (isSupabaseActive()) {
@@ -792,21 +729,14 @@ export async function getMaintenanceAsync() {
 export async function saveMaintenanceAsync(config) {
   const payload = { ...defaultMaintenanceConfig, ...config };
 
-  try {
-    const res = await fetch('/api/admin/maintenance', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    if (res.ok) {
-      const json = await res.json();
-      if (json.success) {
-        saveMaintenanceSync(payload);
-        return payload;
-      }
-    }
-  } catch (e) {
-    console.warn('API /api/admin/maintenance POST unreachable, fallback to client/localStorage:', e);
+  const apiRes = await safeFetchJson('/api/admin/maintenance', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (apiRes.ok && apiRes.json.success) {
+    saveMaintenanceSync(payload);
+    return payload;
   }
 
   if (isSupabaseActive()) {

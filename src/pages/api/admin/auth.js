@@ -1,7 +1,7 @@
 // src/pages/api/admin/auth.js
 import { supabaseServer, isServerSupabaseConfigured } from '../../../utils/supabaseServer';
 
-// export const prerender = false;
+export const prerender = false;
 
 // Fallback password memori server jika database belum menyimpan passcode baru
 let serverMemoryPasscode = null;
