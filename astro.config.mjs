@@ -28,6 +28,31 @@ export default defineConfig({
 
   vite: {
     plugins: [tailwindcss()],
-    customLogger
+    customLogger,
+    build: {
+      minify: 'esbuild',
+      cssMinify: true,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('react') || id.includes('react-dom')) {
+                return 'vendor-react';
+              }
+              if (id.includes('lucide-react')) {
+                return 'vendor-lucide';
+              }
+              if (id.includes('@supabase')) {
+                return 'vendor-supabase';
+              }
+              if (id.includes('framer-motion')) {
+                return 'vendor-framer';
+              }
+              return 'vendor-core';
+            }
+          }
+        }
+      }
+    }
   }
 });
