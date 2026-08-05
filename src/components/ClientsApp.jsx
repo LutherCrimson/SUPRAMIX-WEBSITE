@@ -1,15 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, Clock, Building2, Award, Users, Globe, ArrowRight } from 'lucide-react';
 import logoImg from '../assets/logo.png?url';
-import { getPartnersAsync, getProjectsAsync } from '../utils/dataStore';
+import { getPartnersAsync, getProjectsAsync, getMaintenanceAsync, getMaintenanceSync } from '../utils/dataStore';
+import MaintenanceScreen from './MaintenanceScreen';
 
 export default function ClientsApp() {
+  const [maintenance, setMaintenance] = useState(getMaintenanceSync());
+
+  useEffect(() => {
+    getMaintenanceAsync().then(cfg => {
+      if (cfg) setMaintenance(cfg);
+    });
+
+    const handleDataChange = async () => {
+      const cfg = await getMaintenanceAsync();
+      if (cfg) setMaintenance(cfg);
+    };
+    window.addEventListener('supramix_data_change', handleDataChange);
+    return () => window.removeEventListener('supramix_data_change', handleDataChange);
+  }, []);
+
   // Navigation & Scroll State
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notification, setNotification] = useState(null);
   const [selectedClient, setSelectedClient] = useState(null);
   const [activeImgIdx, setActiveImgIdx] = useState(0);
+
+  if (maintenance && maintenance.enabled) {
+    return <MaintenanceScreen config={maintenance} />;
+  }
 
   // Trigger notification toast
   const triggerNotification = (message) => {

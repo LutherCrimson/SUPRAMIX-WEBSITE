@@ -1,14 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import logoImg from '../assets/logo.png';
-import { getProjectsAsync } from '../utils/dataStore';
+import { getProjectsAsync, getMaintenanceAsync, getMaintenanceSync } from '../utils/dataStore';
 import { Building2, MapPin, Calendar, Layers, ShieldCheck, ArrowUpRight, Search, X } from 'lucide-react';
+import MaintenanceScreen from './MaintenanceScreen';
 
 export default function ProjectsApp() {
+  const [maintenance, setMaintenance] = useState(getMaintenanceSync());
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    getMaintenanceAsync().then(cfg => {
+      if (cfg) setMaintenance(cfg);
+    });
+
+    const handleDataChange = async () => {
+      const cfg = await getMaintenanceAsync();
+      if (cfg) setMaintenance(cfg);
+    };
+    window.addEventListener('supramix_data_change', handleDataChange);
+    return () => window.removeEventListener('supramix_data_change', handleDataChange);
+  }, []);
 
   useEffect(() => {
     const loadProjects = async () => {
@@ -17,6 +32,10 @@ export default function ProjectsApp() {
     };
     loadProjects();
   }, []);
+
+  if (maintenance && maintenance.enabled) {
+    return <MaintenanceScreen config={maintenance} />;
+  }
 
   const categories = ['All', ...new Set(projects.map(p => p.category).filter(Boolean))];
 

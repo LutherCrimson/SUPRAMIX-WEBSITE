@@ -7,6 +7,17 @@ const KEYS = {
   PARTNERS: 'supramix_admin_partners_v1',
   PASSCODE: 'supramix_admin_passcode_v1',
   ABOUT: 'supramix_admin_about_v1',
+  MAINTENANCE: 'supramix_admin_maintenance_v1',
+};
+
+export const defaultMaintenanceConfig = {
+  enabled: false,
+  title: 'Sistem Dalam Pemeliharaan',
+  message: 'Kami sedang melakukan peningkatan performa dan pemeliharaan sistem rutin untuk memberikan pengalaman terbaik kepada Anda. Silakan kembali beberapa saat lagi.',
+  estimatedTime: '1 - 2 Jam',
+  contactWhatsapp: '6281234567890',
+  contactEmail: 'info@supramix.co.id',
+  allowAdminAccess: true
 };
 
 export const isSupabaseActive = () => isSupabaseConfigured();
@@ -734,3 +745,83 @@ export async function saveAboutSectionAsync(aboutData) {
   setItem(KEYS.ABOUT, payload);
   return payload;
 }
+
+// --- MAINTENANCE MODE ASYNC & LOCAL FUNCTIONS ---
+
+export function getMaintenanceSync() {
+  const local = getItem(KEYS.MAINTENANCE, null);
+  return local ? { ...defaultMaintenanceConfig, ...local } : defaultMaintenanceConfig;
+}
+
+export function saveMaintenanceSync(config) {
+  const payload = { ...defaultMaintenanceConfig, ...config };
+  setItem(KEYS.MAINTENANCE, payload);
+  return payload;
+}
+
+export async function getMaintenanceAsync() {
+  try {
+    const res = await fetch('/api/admin/maintenance');
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success && json.data) {
+        saveMaintenanceSync(json.data);
+        return { ...defaultMaintenanceConfig, ...json.data };
+      }
+    }
+  } catch (e) {
+    console.warn('API /api/admin/maintenance unreachable, fallback to localStorage/default:', e);
+  }
+
+  if (isSupabaseActive()) {
+    try {
+      const { data, error } = await supabase.from('site_settings').select('*').eq('key', 'maintenance').maybeSingle();
+      if (!error && data && data.value) {
+        const parsed = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
+        saveMaintenanceSync(parsed);
+        return { ...defaultMaintenanceConfig, ...parsed };
+      }
+    } catch (e) {
+      console.warn('Supabase site_settings maintenance fetch error:', e);
+    }
+  }
+
+  return getMaintenanceSync();
+}
+
+export async function saveMaintenanceAsync(config) {
+  const payload = { ...defaultMaintenanceConfig, ...config };
+
+  try {
+    const res = await fetch('/api/admin/maintenance', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success) {
+        saveMaintenanceSync(payload);
+        return payload;
+      }
+    }
+  } catch (e) {
+    console.warn('API /api/admin/maintenance POST unreachable, fallback to client/localStorage:', e);
+  }
+
+  if (isSupabaseActive()) {
+    try {
+      await supabase.from('site_settings').upsert({
+        key: 'maintenance',
+        value: payload,
+        updated_at: new Date().toISOString()
+      });
+    } catch (e) {
+      console.warn('Supabase site_settings maintenance upsert error:', e);
+    }
+  }
+
+  saveMaintenanceSync(payload);
+  return payload;
+}
+

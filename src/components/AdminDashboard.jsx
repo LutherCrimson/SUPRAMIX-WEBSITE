@@ -22,7 +22,9 @@ import {
   ArrowLeft,
   Eye,
   EyeOff,
-  Info
+  Info,
+  Wrench,
+  AlertTriangle
 } from 'lucide-react';
 import {
   getProducts,
@@ -51,6 +53,9 @@ import {
   getAboutSectionAsync,
   saveAboutSectionAsync,
   defaultAboutSection,
+  getMaintenanceAsync,
+  saveMaintenanceAsync,
+  defaultMaintenanceConfig,
   exportAllData,
   importAllData,
   resetAllDataToDefault,
@@ -64,7 +69,7 @@ export default function AdminDashboard() {
   const [showNewPasscode, setShowNewPasscode] = useState(false);
   const [loginError, setLoginError] = useState('');
 
-  const [activeTab, setActiveTab] = useState('products'); // 'products', 'projects', 'partners', 'settings'
+  const [activeTab, setActiveTab] = useState('products'); // 'products', 'projects', 'partners', 'about', 'maintenance', 'settings'
   const [notification, setNotification] = useState('');
 
   // Datasets
@@ -73,6 +78,10 @@ export default function AdminDashboard() {
   const [partners, setPartners] = useState([]);
   const [aboutForm, setAboutForm] = useState(defaultAboutSection);
   const [savingAbout, setSavingAbout] = useState(false);
+
+  // Maintenance state
+  const [maintenanceForm, setMaintenanceForm] = useState(defaultMaintenanceConfig);
+  const [savingMaintenance, setSavingMaintenance] = useState(false);
 
   // Modals / Forms
   const [productForm, setProductForm] = useState(null); // null or object
@@ -119,10 +128,12 @@ export default function AdminDashboard() {
     const projs = await getProjectsAsync();
     const parts = await getPartnersAsync();
     const aboutData = await getAboutSectionAsync();
+    const maintData = await getMaintenanceAsync();
     setProducts(prods);
     setProjects(projs);
     setPartners(parts);
     if (aboutData) setAboutForm(aboutData);
+    if (maintData) setMaintenanceForm(maintData);
   };
 
   const handleSaveAbout = async (e) => {
@@ -131,11 +142,25 @@ export default function AdminDashboard() {
     try {
       const updated = await saveAboutSectionAsync(aboutForm);
       setAboutForm(updated);
-      triggerToast('Section About Us berhasil disimpan & diperbarui!');
+      notify('Section About Us berhasil disimpan & diperbarui!');
     } catch (err) {
       alert('Gagal menyimpan About Section: ' + err.message);
     } finally {
       setSavingAbout(false);
+    }
+  };
+
+  const handleSaveMaintenance = async (e) => {
+    if (e) e.preventDefault();
+    setSavingMaintenance(true);
+    try {
+      const updated = await saveMaintenanceAsync(maintenanceForm);
+      setMaintenanceForm(updated);
+      notify(`Mode Pemeliharaan ${updated.enabled ? 'AKTIF' : 'NONAKTIF'} & berhasil disimpan!`);
+    } catch (err) {
+      alert('Gagal menyimpan Pengaturan Maintenance Mode: ' + err.message);
+    } finally {
+      setSavingMaintenance(false);
     }
   };
 
@@ -495,6 +520,21 @@ export default function AdminDashboard() {
           >
             <Info className="w-4 h-4" />
             Tentang Kami (About Section)
+          </button>
+
+          <button
+            onClick={() => setActiveTab('maintenance')}
+            className={`px-5 py-3 rounded-t-xl text-xs font-bold transition-all flex items-center gap-2 border-b-2 relative ${
+              activeTab === 'maintenance'
+                ? 'bg-amber-500/10 text-amber-400 border-amber-500'
+                : 'text-slate-400 hover:text-white border-transparent'
+            }`}
+          >
+            <Wrench className="w-4 h-4 text-amber-400" />
+            Mode Pemeliharaan (Maintenance)
+            {maintenanceForm.enabled && (
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+            )}
           </button>
 
           <button
@@ -1040,6 +1080,170 @@ export default function AdminDashboard() {
                     <p className="font-bold text-blue-400 uppercase tracking-wider text-[8px]">{aboutForm.image_badge || 'Badge'}</p>
                     <p className="font-medium text-white truncate">{aboutForm.image_caption || 'Caption'}</p>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 6: MAINTENANCE MODE MANAGEMENT */}
+        {activeTab === 'maintenance' && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Control Form */}
+            <div className="lg:col-span-7 bg-[#0B152C] border border-white/10 p-6 rounded-2xl space-y-6">
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-amber-500/10 text-amber-400 rounded-xl">
+                    <Wrench className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-white text-base">Kelola Mode Pemeliharaan (Maintenance)</h3>
+                    <p className="text-xs text-slate-400">Aktifkan mode pemeliharaan untuk mengalihkan pengunjung umum ke halaman maintenance.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status Switch Toggle */}
+              <div className="bg-[#070D1F] border border-white/10 p-5 rounded-xl flex items-center justify-between">
+                <div>
+                  <h4 className="font-bold text-white text-sm flex items-center gap-2">
+                    Status Maintenance Mode
+                    {maintenanceForm.enabled ? (
+                      <span className="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full font-bold uppercase">
+                        AKTIF
+                      </span>
+                    ) : (
+                      <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold uppercase">
+                        NONAKTIF (Website Normal)
+                      </span>
+                    )}
+                  </h4>
+                  <p className="text-xs text-slate-400 mt-1">
+                    {maintenanceForm.enabled
+                      ? 'Website publik saat ini terkunci. Hanya admin yang mengakses /admin yang dapat melihat dashboard.'
+                      : 'Website dapat diakses secara penuh oleh seluruh pengunjung.'}
+                  </p>
+                </div>
+
+                <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                  <input
+                    type="checkbox"
+                    checked={!!maintenanceForm.enabled}
+                    onChange={(e) => setMaintenanceForm({ ...maintenanceForm, enabled: e.target.checked })}
+                    className="sr-only peer"
+                  />
+                  <div className="w-14 h-7 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-amber-500"></div>
+                </label>
+              </div>
+
+              <form onSubmit={handleSaveMaintenance} className="space-y-4 text-xs">
+                {/* Judul Pengumuman */}
+                <div>
+                  <label className="block text-slate-400 mb-1 font-semibold">Judul Pengumuman Maintenance</label>
+                  <input
+                    type="text"
+                    required
+                    value={maintenanceForm.title || ''}
+                    onChange={(e) => setMaintenanceForm({ ...maintenanceForm, title: e.target.value })}
+                    placeholder="Contoh: Sistem Dalam Pemeliharaan"
+                    className="w-full bg-[#070D1F] border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                {/* Pesan Penjelasan */}
+                <div>
+                  <label className="block text-slate-400 mb-1 font-semibold">Pesan Deskripsi / Penjelasan Pengunjung</label>
+                  <textarea
+                    rows={4}
+                    required
+                    value={maintenanceForm.message || ''}
+                    onChange={(e) => setMaintenanceForm({ ...maintenanceForm, message: e.target.value })}
+                    placeholder="Tulis penjelasan pemeliharaan sistem untuk pengunjung..."
+                    className="w-full bg-[#070D1F] border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-amber-500 leading-relaxed"
+                  />
+                </div>
+
+                {/* Perkiraan Selesai & Kontak WA/Email */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-slate-400 mb-1 font-semibold">Estimasi Waktu Selesai</label>
+                    <input
+                      type="text"
+                      value={maintenanceForm.estimatedTime || ''}
+                      onChange={(e) => setMaintenanceForm({ ...maintenanceForm, estimatedTime: e.target.value })}
+                      placeholder="Ex: 1 - 2 Jam"
+                      className="w-full bg-[#070D1F] border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 mb-1 font-semibold">Nomor WhatsApp Support</label>
+                    <input
+                      type="text"
+                      value={maintenanceForm.contactWhatsapp || ''}
+                      onChange={(e) => setMaintenanceForm({ ...maintenanceForm, contactWhatsapp: e.target.value })}
+                      placeholder="Ex: 6281234567890"
+                      className="w-full bg-[#070D1F] border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 mb-1 font-semibold">Email Kontak Support</label>
+                    <input
+                      type="text"
+                      value={maintenanceForm.contactEmail || ''}
+                      onChange={(e) => setMaintenanceForm({ ...maintenanceForm, contactEmail: e.target.value })}
+                      placeholder="Ex: info@supramix.co.id"
+                      className="w-full bg-[#070D1F] border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Submit button */}
+                <div className="pt-4 border-t border-white/10 flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={savingMaintenance}
+                    className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs px-6 py-3 rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-amber-500/20 disabled:opacity-50 cursor-pointer"
+                  >
+                    <Save className="w-4 h-4" />
+                    {savingMaintenance ? 'Menyimpan...' : 'Simpan Pengaturan Maintenance Mode'}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Live Visual Preview Column */}
+            <div className="lg:col-span-5 bg-[#0B152C] border border-white/10 p-6 rounded-2xl space-y-4">
+              <div className="flex items-center gap-2 text-slate-300 font-bold border-b border-white/10 pb-3">
+                <Eye className="w-4 h-4 text-amber-400" />
+                <span>Live Preview Tampilan Maintenance Mode</span>
+              </div>
+
+              <div className="bg-slate-950 text-slate-100 p-6 rounded-2xl border border-slate-800 space-y-4 text-center shadow-xl relative overflow-hidden">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-semibold tracking-wide uppercase">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>
+                  Maintenance Active
+                </div>
+
+                <h4 className="text-lg font-black text-white leading-tight">
+                  {maintenanceForm.title || 'Sistem Dalam Pemeliharaan'}
+                </h4>
+
+                <p className="text-slate-400 text-xs leading-relaxed font-light">
+                  {maintenanceForm.message || 'Pesan penjelasan maintenance...'}
+                </p>
+
+                <div className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-300 flex items-center justify-center gap-2">
+                  <span className="text-slate-400">Estimasi Selesai:</span>
+                  <strong className="text-emerald-400 font-semibold">{maintenanceForm.estimatedTime || '1 - 2 Jam'}</strong>
+                </div>
+
+                <div className="flex gap-2 justify-center pt-2">
+                  <span className="bg-emerald-600/30 border border-emerald-500/30 text-emerald-400 text-[10px] px-3 py-1.5 rounded-lg font-semibold">
+                    WhatsApp
+                  </span>
+                  <span className="bg-slate-800 border border-slate-700 text-slate-300 text-[10px] px-3 py-1.5 rounded-lg font-semibold">
+                    Email Support
+                  </span>
                 </div>
               </div>
             </div>

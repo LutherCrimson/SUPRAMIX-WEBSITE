@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, Clock, Building2 } from 'lucide-react';
 import logoImg from '../assets/logo.png?url';
+import { getMaintenanceAsync, getMaintenanceSync } from '../utils/dataStore';
+import MaintenanceScreen from './MaintenanceScreen';
 
 // --- INLINE CUSTOM ICON COMPONENT (Matching AeroInsulApp to guarantee zero broken dependencies) ---
 const Icon = ({ name, className = "w-6 h-6", ...props }) => {
@@ -71,6 +73,21 @@ const Icon = ({ name, className = "w-6 h-6", ...props }) => {
 };
 
 export default function ContactApp() {
+  const [maintenance, setMaintenance] = useState(getMaintenanceSync());
+
+  useEffect(() => {
+    getMaintenanceAsync().then(cfg => {
+      if (cfg) setMaintenance(cfg);
+    });
+
+    const handleDataChange = async () => {
+      const cfg = await getMaintenanceAsync();
+      if (cfg) setMaintenance(cfg);
+    };
+    window.addEventListener('supramix_data_change', handleDataChange);
+    return () => window.removeEventListener('supramix_data_change', handleDataChange);
+  }, []);
+
   // Navigation & Scroll State
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -80,6 +97,10 @@ export default function ContactApp() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [notification, setNotification] = useState(null);
+
+  if (maintenance && maintenance.enabled) {
+    return <MaintenanceScreen config={maintenance} />;
+  }
 
   // Trigger notification toast
   const triggerNotification = (message) => {
