@@ -1,0 +1,57 @@
+@import "tailwindcss";
+@source "../**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue}";
+
+@theme {
+  --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --color-brand-bg: #FFFFFF;
+  --color-brand-bg-light: #F4F8FD;
+  --color-brand-navy: #0A1931;
+  --color-brand-card: #FFFFFF;
+  --color-brand-accent: #0052CC;
+  --color-brand-accent-hover: #0043A4;
+  --color-brand-muted: #4A5B78;
+  --color-brand-border: #E2EEFC;
+  --color-brand-silver: #94a3b8;
+  --color-brand-titanium: #F4F4F4;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-brand-bg);
+  color: var(--color-brand-navy);
+}
+
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.rotate-x-45 {
+  transform: rotateX(45deg);
+}
+
+::selection {
+  background-color: var(--color-brand-accent);
+  color: white;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleUp {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+.animate-scale-up {
+  animation: scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

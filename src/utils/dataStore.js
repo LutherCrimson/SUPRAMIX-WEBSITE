@@ -1,0 +1,736 @@
+// src/utils/dataStore.js
+import { supabase, isSupabaseConfigured } from './supabase.js';
+
+const KEYS = {
+  PRODUCTS: 'supramix_admin_products_v1',
+  PROJECTS: 'supramix_admin_projects_v1',
+  PARTNERS: 'supramix_admin_partners_v1',
+  PASSCODE: 'supramix_admin_passcode_v1',
+  ABOUT: 'supramix_admin_about_v1',
+};
+
+export const isSupabaseActive = () => isSupabaseConfigured();
+
+// Default About Section Data
+export const defaultAboutSection = {
+  id: 'about-main',
+  badge_text: 'About Us',
+  title: 'Supramix Technology of Insulating Material',
+  description: 'Supramix is a leading manufacturer and distributor established in 2019 focusing in Bituminous products, waterproofing membranes, and polymer insulation solutions. Serving local markets and distributing high-grade building insulation materials across every major island in Indonesia.',
+  stat1_number: '2019',
+  stat1_label: 'Established Foundation',
+  stat2_number: '100%',
+  stat2_label: 'Indonesia Coverage',
+  image_url: '/products/app-sand-membrane.jpg',
+  image_badge: 'Building Structure Application',
+  image_caption: 'APP Bituminous Waterproofing Membrane Roll on Concrete Deck'
+};
+
+// Default Products Initial Catalog
+export const defaultProducts = [
+  {
+    id: 'therma-max-pro',
+    name: 'ThermaMax Pro Ultra (R-6.5)',
+    category: 'Thermal Insulation',
+    price: 189,
+    unit: 'pack (12 sqm)',
+    rating: 4.9,
+    reviews: 142,
+    desc: 'Top-tier high density fiberglass batts designed with dynamic thermal fibers for extreme energy isolation in roof & wall building structures.',
+    features: ['98% Radiance Deflection', 'Zero Formaldehyde', 'Class A1 Fireproof'],
+    image: '/Projects/sph1.jpeg'
+  },
+  {
+    id: 'acoustic-shield-elite',
+    name: 'AcousticShield Elite-Mass',
+    category: 'Acoustic Insulation',
+    price: 245,
+    unit: 'roll (10 sqm)',
+    rating: 5.0,
+    reviews: 98,
+    desc: 'Engineered heavy-weight viscoelastic bitumen polymer with high density core designed to eliminate low-frequency sound & structural vibrations.',
+    features: ['STC Rating 68+', 'Micro-porous structure', 'Ultra-flexible install'],
+    image: '/Projects/binus1.jpeg'
+  },
+  {
+    id: 'hydro-guard-mem-3',
+    name: 'HydroGuard Super Bitumen Membrane Max-3',
+    category: 'Waterproofing',
+    price: 210,
+    unit: 'roll (15 sqm)',
+    rating: 4.8,
+    reviews: 81,
+    desc: 'Multi-ply APP bituminous waterproofing membrane designed for structural concrete roofs, basements, and foundation decks.',
+    features: ['Zero water permeability', 'Self-healing bitumen fibers', '100% Weather Resilience'],
+    image: '/products/app-sand-membrane.jpg'
+  },
+  {
+    id: 'pyro-block-armour',
+    name: 'PyroBlock Core Armor Insulation',
+    category: 'Fire Protection',
+    price: 279,
+    unit: 'pack (8 sqm)',
+    rating: 4.9,
+    reviews: 119,
+    desc: 'Mineral wool core composite infused with hyper-refractory crystals to withstand temperatures up to 1300°C for structural steel framing.',
+    features: ['ASTM E84 Gold Standard', 'Non-toxic decomposition', 'Moisture & Fire Resistant'],
+    image: '/Projects/kesehatan1.jpeg'
+  }
+];
+
+// Default Projects Showcase Initial Catalog
+export const defaultProjects = [
+  {
+    id: 'proj-kemenkes',
+    title: 'Poltekes Gondangdia Project',
+    clientName: 'Ministry of Health (KEMENKES)',
+    category: 'Infrastructure / Healthcare',
+    materialsUsed: 'Bitumen Membrane & Basalt Spring Sealant',
+    location: 'Jakarta, Indonesia',
+    year: '2023',
+    desc: 'SUPRAMIX worked alongside PT Wijaya Karya to install high-performance bitumen membranes and basalt expansion sealants for critical infrastructure bridges and healthcare buildings.',
+    image: '/Projects/kesehatan1.jpeg'
+  },
+  {
+    id: 'proj-sunter',
+    title: 'Sunter Luxury Residential',
+    clientName: 'Private Developer',
+    category: 'Residential',
+    materialsUsed: 'APP Sand Membrane & Prime Coat WB Injection',
+    location: 'North Jakarta, Indonesia',
+    year: '2023',
+    desc: 'Supplying APP sand membrane protection and WB epoxy injection system across major luxury residential complexes and underpass structures.',
+    image: '/Projects/sunter1.jpeg'
+  },
+  {
+    id: 'proj-shb',
+    title: 'Sekolah Harapan Bangsa Campus',
+    clientName: 'Sekolah Harapan Bangsa',
+    category: 'Educational',
+    materialsUsed: 'Coating-PU Modified & APP PE Membrane',
+    location: 'Modernland, Tangerang',
+    year: '2024',
+    desc: 'Engineering elastomeric modified PU coatings and heavy PE membrane barriers for institutional roof complexes and waterproofing seals.',
+    image: '/Projects/sph1.jpeg'
+  },
+  {
+    id: 'proj-binus',
+    title: 'BINUS University Campus Tower',
+    clientName: 'BINA NUSANTARA UNIVERSITY',
+    category: 'Educational / High Rise',
+    materialsUsed: 'Basalt Spring Green & PyroBlock Core Armor',
+    location: 'West Jakarta, Indonesia',
+    year: '2024',
+    desc: 'Deploying fire-resistant PyroBlock and Basalt insulation batts for state-of-the-art academic building roof decks.',
+    image: '/Projects/binus1.jpeg'
+  }
+];
+
+// Default Partners & Clients Catalog
+export const defaultPartners = [
+  {
+    id: 'part-kemenkes',
+    name: 'Ministry of Health',
+    shortName: 'KEMENKES',
+    sector: 'Government & Healthcare',
+    description: 'National health authority partnership for medical and educational facility waterproofing.',
+    logo: '/Projects/kesehatan1.jpeg',
+    website: 'https://kemkes.go.id'
+  },
+  {
+    id: 'part-sunter',
+    name: 'Sunter Luxury Development',
+    shortName: 'Sunter Group',
+    sector: 'Real Estate & Living',
+    description: 'Premium developer partner for high-end residential waterproofing and insulation systems.',
+    logo: '/Projects/sunter1.jpeg',
+    website: '#'
+  },
+  {
+    id: 'part-shb',
+    name: 'Sekolah Harapan Bangsa',
+    shortName: 'SHB',
+    sector: 'Education',
+    description: 'Educational institution partner for durable eco-friendly roof and thermal barrier protection.',
+    logo: '/Projects/sph1.jpeg',
+    website: '#'
+  },
+  {
+    id: 'part-binus',
+    name: 'BINA NUSANTARA UNIVERSITY',
+    shortName: 'BINUS',
+    sector: 'Higher Education',
+    description: 'Leading university network utilizing SUPRAMIX passive fire protection and insulation.',
+    logo: '/Projects/binus1.jpeg',
+    website: 'https://binus.ac.id'
+  }
+];
+
+// --- LOCAL STORAGE UTILITIES ---
+
+function getItem(key, defaultValue) {
+  if (typeof window === 'undefined') return defaultValue;
+  try {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : defaultValue;
+  } catch (e) {
+    console.error(`Error reading ${key} from localStorage:`, e);
+    return defaultValue;
+  }
+}
+
+function setItem(key, value) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+    window.dispatchEvent(new Event('supramix_data_change'));
+  } catch (e) {
+    console.error(`Error saving ${key} to localStorage:`, e);
+  }
+}
+
+// =========================================================
+// ASYNCHRONOUS ASTRO SERVER BACKEND API CALLS
+// =========================================================
+
+// --- PRODUCTS ---
+
+export async function getProductsAsync() {
+  try {
+    const res = await fetch('/api/admin/products');
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data)) {
+        setItem(KEYS.PRODUCTS, json.data);
+        return json.data;
+      }
+    }
+  } catch (e) {
+    console.warn('API /api/admin/products unreachable, fallback to client/localStorage:', e);
+  }
+
+  if (isSupabaseActive()) {
+    try {
+      const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
+      if (!error && Array.isArray(data)) {
+        const formatted = data.map(p => ({
+          ...p,
+          features: Array.isArray(p.features) ? p.features : (typeof p.features === 'string' ? JSON.parse(p.features) : [])
+        }));
+        setItem(KEYS.PRODUCTS, formatted);
+        return formatted;
+      }
+    } catch (err) {
+      console.warn('Supabase client fetch products error:', err);
+    }
+  }
+
+  const local = getItem(KEYS.PRODUCTS, null);
+  return Array.isArray(local) ? local : defaultProducts;
+}
+
+export async function saveProductAsync(product) {
+  const targetId = (product.id && String(product.id).trim()) ? String(product.id).trim() : 'prod-' + Date.now();
+  const productToSave = { ...product, id: targetId };
+
+  try {
+    const res = await fetch('/api/admin/products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(productToSave)
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success) {
+        return saveProduct(productToSave);
+      }
+    }
+  } catch (e) {
+    console.error('API /api/admin/products POST error:', e);
+  }
+
+  if (isSupabaseActive()) {
+    try {
+      await supabase.from('products').upsert({
+        id: productToSave.id,
+        name: productToSave.name,
+        category: productToSave.category,
+        price: productToSave.price,
+        unit: productToSave.unit,
+        rating: productToSave.rating,
+        reviews: productToSave.reviews,
+        desc: productToSave.desc,
+        features: JSON.stringify(productToSave.features || []),
+        image: productToSave.image
+      });
+    } catch (err) {
+      console.warn('Supabase client upsert product error:', err);
+    }
+  }
+
+  return saveProduct(productToSave);
+}
+
+export async function deleteProductAsync(id) {
+  try {
+    const res = await fetch('/api/admin/products', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success) {
+        return deleteProduct(id);
+      }
+    }
+  } catch (e) {
+    console.error('API /api/admin/products DELETE error:', e);
+  }
+
+  if (isSupabaseActive()) {
+    try {
+      await supabase.from('products').delete().eq('id', id);
+    } catch (err) {
+      console.warn('Supabase client delete product error:', err);
+    }
+  }
+
+  return deleteProduct(id);
+}
+
+// --- PROJECTS ---
+
+export async function getProjectsAsync() {
+  try {
+    const res = await fetch('/api/admin/projects');
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data)) {
+        setItem(KEYS.PROJECTS, json.data);
+        return json.data;
+      }
+    }
+  } catch (e) {
+    console.warn('API /api/admin/projects unreachable, fallback to client/localStorage:', e);
+  }
+
+  if (isSupabaseActive()) {
+    try {
+      const { data, error } = await supabase.from('projects').select('*').order('created_at', { ascending: false });
+      if (!error && Array.isArray(data)) {
+        const formatted = data.map(p => ({
+          id: p.id,
+          title: p.title,
+          clientName: p.client_name,
+          category: p.category,
+          materialsUsed: p.materials_used,
+          location: p.location,
+          year: p.year,
+          desc: p.desc,
+          image: p.image
+        }));
+        setItem(KEYS.PROJECTS, formatted);
+        return formatted;
+      }
+    } catch (err) {
+      console.warn('Supabase client fetch projects error:', err);
+    }
+  }
+
+  const local = getItem(KEYS.PROJECTS, null);
+  return Array.isArray(local) ? local : defaultProjects;
+}
+
+export async function saveProjectAsync(project) {
+  const targetId = (project.id && String(project.id).trim()) ? String(project.id).trim() : 'proj-' + Date.now();
+  const projectToSave = { ...project, id: targetId };
+
+  try {
+    const res = await fetch('/api/admin/projects', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(projectToSave)
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success) {
+        return saveProject(projectToSave);
+      }
+    }
+  } catch (e) {
+    console.error('API /api/admin/projects POST error:', e);
+  }
+
+  if (isSupabaseActive()) {
+    try {
+      await supabase.from('projects').upsert({
+        id: projectToSave.id,
+        title: projectToSave.title,
+        client_name: projectToSave.clientName,
+        category: projectToSave.category,
+        materials_used: projectToSave.materialsUsed,
+        location: projectToSave.location,
+        year: projectToSave.year,
+        desc: projectToSave.desc,
+        image: projectToSave.image
+      });
+    } catch (err) {
+      console.warn('Supabase client upsert project error:', err);
+    }
+  }
+
+  return saveProject(projectToSave);
+}
+
+export async function deleteProjectAsync(id) {
+  try {
+    const res = await fetch('/api/admin/projects', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success) {
+        return deleteProject(id);
+      }
+    }
+  } catch (e) {
+    console.error('API /api/admin/projects DELETE error:', e);
+  }
+
+  if (isSupabaseActive()) {
+    try {
+      await supabase.from('projects').delete().eq('id', id);
+    } catch (err) {
+      console.warn('Supabase client delete project error:', err);
+    }
+  }
+
+  return deleteProject(id);
+}
+
+// --- PARTNERS ---
+
+export async function getPartnersAsync() {
+  try {
+    const res = await fetch('/api/admin/partners');
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data)) {
+        setItem(KEYS.PARTNERS, json.data);
+        return json.data;
+      }
+    }
+  } catch (e) {
+    console.warn('API /api/admin/partners unreachable, fallback to client/localStorage:', e);
+  }
+
+  if (isSupabaseActive()) {
+    try {
+      const { data, error } = await supabase.from('partners').select('*').order('created_at', { ascending: false });
+      if (!error && Array.isArray(data)) {
+        const formatted = data.map(p => ({
+          id: p.id,
+          name: p.name,
+          shortName: p.short_name,
+          sector: p.sector,
+          description: p.description,
+          logo: p.logo,
+          website: p.website
+        }));
+        setItem(KEYS.PARTNERS, formatted);
+        return formatted;
+      }
+    } catch (err) {
+      console.warn('Supabase client fetch partners error:', err);
+    }
+  }
+
+  const local = getItem(KEYS.PARTNERS, null);
+  return Array.isArray(local) ? local : defaultPartners;
+}
+
+export async function savePartnerAsync(partner) {
+  const targetId = (partner.id && String(partner.id).trim()) ? String(partner.id).trim() : 'part-' + Date.now();
+  const partnerToSave = { ...partner, id: targetId };
+
+  try {
+    const res = await fetch('/api/admin/partners', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(partnerToSave)
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success) {
+        return savePartner(partnerToSave);
+      }
+    }
+  } catch (e) {
+    console.error('API /api/admin/partners POST error:', e);
+  }
+
+  if (isSupabaseActive()) {
+    try {
+      await supabase.from('partners').upsert({
+        id: partnerToSave.id,
+        name: partnerToSave.name,
+        short_name: partnerToSave.shortName,
+        sector: partnerToSave.sector,
+        description: partnerToSave.description,
+        logo: partnerToSave.logo,
+        website: partnerToSave.website
+      });
+    } catch (err) {
+      console.warn('Supabase client upsert partner error:', err);
+    }
+  }
+
+  return savePartner(partnerToSave);
+}
+
+export async function deletePartnerAsync(id) {
+  try {
+    const res = await fetch('/api/admin/partners', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success) {
+        return deletePartner(id);
+      }
+    }
+  } catch (e) {
+    console.error('API /api/admin/partners DELETE error:', e);
+  }
+
+  if (isSupabaseActive()) {
+    try {
+      await supabase.from('partners').delete().eq('id', id);
+    } catch (err) {
+      console.warn('Supabase client delete partner error:', err);
+    }
+  }
+
+  return deletePartner(id);
+}
+
+// --- PASSCODE / AUTH SERVER API ---
+
+export async function getAdminPasscodeAsync() {
+  return getItem(KEYS.PASSCODE, 'admin123');
+}
+
+export async function verifyAdminPasscodeServer(passcode) {
+  try {
+    const res = await fetch('/api/admin/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'verify', passcode })
+    });
+    const json = await res.json();
+    if (res.status === 200 || res.status === 401) {
+      return Boolean(json && json.success);
+    }
+  } catch (e) {
+    console.warn('API /api/admin/auth fallback to client check:', e);
+  }
+  return passcode === getAdminPasscode();
+}
+
+export async function setAdminPasscodeAsync(newCode) {
+  try {
+    const res = await fetch('/api/admin/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'change', newPasscode: newCode })
+    });
+    const json = await res.json();
+    if (res.ok && json.success) {
+      setAdminPasscode(newCode);
+      return { success: true };
+    }
+    return { success: false, error: json.error || 'Gagal memperbarui password di server' };
+  } catch (e) {
+    console.error('API /api/admin/auth set passcode error:', e);
+    return { success: false, error: e.message };
+  }
+}
+
+// =========================================================
+// SYNCHRONOUS BACKWARD COMPATIBLE METHODS
+// =========================================================
+
+export function getAdminPasscode() {
+  return getItem(KEYS.PASSCODE, 'admin123');
+}
+
+export function setAdminPasscode(newCode) {
+  setItem(KEYS.PASSCODE, newCode);
+}
+
+export function getProducts() {
+  return getItem(KEYS.PRODUCTS, defaultProducts);
+}
+
+export function saveProduct(product) {
+  const products = getProducts();
+  const targetId = (product.id && String(product.id).trim()) ? String(product.id).trim() : 'prod-' + Date.now();
+  const productToSave = { ...product, id: targetId };
+
+  const existingIdx = products.findIndex(p => p.id === targetId);
+  if (existingIdx >= 0) {
+    products[existingIdx] = productToSave;
+  } else {
+    products.unshift(productToSave);
+  }
+  setItem(KEYS.PRODUCTS, products);
+  return products;
+}
+
+export function deleteProduct(id) {
+  const products = getProducts().filter(p => p.id !== id);
+  setItem(KEYS.PRODUCTS, products);
+  return products;
+}
+
+export function getProjects() {
+  return getItem(KEYS.PROJECTS, defaultProjects);
+}
+
+export function saveProject(project) {
+  const projects = getProjects();
+  const targetId = (project.id && String(project.id).trim()) ? String(project.id).trim() : 'proj-' + Date.now();
+  const projectToSave = { ...project, id: targetId };
+
+  const existingIdx = projects.findIndex(p => p.id === targetId);
+  if (existingIdx >= 0) {
+    projects[existingIdx] = projectToSave;
+  } else {
+    projects.unshift(projectToSave);
+  }
+  setItem(KEYS.PROJECTS, projects);
+  return projects;
+}
+
+export function deleteProject(id) {
+  const projects = getProjects().filter(p => p.id !== id);
+  setItem(KEYS.PROJECTS, projects);
+  return projects;
+}
+
+export function getPartners() {
+  return getItem(KEYS.PARTNERS, defaultPartners);
+}
+
+export function savePartner(partner) {
+  const partners = getPartners();
+  const targetId = (partner.id && String(partner.id).trim()) ? String(partner.id).trim() : 'part-' + Date.now();
+  const partnerToSave = { ...partner, id: targetId };
+
+  const existingIdx = partners.findIndex(p => p.id === targetId);
+  if (existingIdx >= 0) {
+    partners[existingIdx] = partnerToSave;
+  } else {
+    partners.unshift(partnerToSave);
+  }
+  setItem(KEYS.PARTNERS, partners);
+  return partners;
+}
+
+export function deletePartner(id) {
+  const partners = getPartners().filter(p => p.id !== id);
+  setItem(KEYS.PARTNERS, partners);
+  return partners;
+}
+
+export function exportAllData() {
+  return {
+    version: '1.0',
+    exportDate: new Date().toISOString(),
+    products: getProducts(),
+    projects: getProjects(),
+    partners: getPartners()
+  };
+}
+
+export function importAllData(data) {
+  if (!data || typeof data !== 'object') throw new Error('Invalid data format');
+  if (Array.isArray(data.products)) setItem(KEYS.PRODUCTS, data.products);
+  if (Array.isArray(data.projects)) setItem(KEYS.PROJECTS, data.projects);
+  if (Array.isArray(data.partners)) setItem(KEYS.PARTNERS, data.partners);
+}
+
+export function resetAllDataToDefault() {
+  setItem(KEYS.PRODUCTS, defaultProducts);
+  setItem(KEYS.PROJECTS, defaultProjects);
+  setItem(KEYS.PARTNERS, defaultPartners);
+  setItem(KEYS.ABOUT, defaultAboutSection);
+}
+
+// --- ABOUT SECTION ASYNC & LOCAL FUNCTIONS ---
+
+export async function getAboutSectionAsync() {
+  try {
+    const res = await fetch('/api/admin/about');
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success && json.data) {
+        setItem(KEYS.ABOUT, json.data);
+        return json.data;
+      }
+    }
+  } catch (e) {
+    console.warn('API /api/admin/about unreachable, fallback to localStorage/default:', e);
+  }
+
+  if (isSupabaseActive()) {
+    try {
+      const { data, error } = await supabase.from('about_section').select('*').eq('id', 'about-main').maybeSingle();
+      if (!error && data) {
+        setItem(KEYS.ABOUT, data);
+        return data;
+      }
+    } catch (e) {
+      console.warn('Supabase about_section fetch error:', e);
+    }
+  }
+
+  return getItem(KEYS.ABOUT, defaultAboutSection);
+}
+
+export async function saveAboutSectionAsync(aboutData) {
+  const payload = { ...defaultAboutSection, ...aboutData, id: 'about-main' };
+
+  try {
+    const res = await fetch('/api/admin/about', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success) {
+        setItem(KEYS.ABOUT, payload);
+        return payload;
+      }
+    }
+  } catch (e) {
+    console.warn('API /api/admin/about POST unreachable, fallback to client/localStorage:', e);
+  }
+
+  if (isSupabaseActive()) {
+    try {
+      await supabase.from('about_section').upsert(payload);
+    } catch (e) {
+      console.warn('Supabase about_section upsert error:', e);
+    }
+  }
+
+  setItem(KEYS.ABOUT, payload);
+  return payload;
+}
