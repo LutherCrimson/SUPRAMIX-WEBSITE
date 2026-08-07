@@ -1023,32 +1023,12 @@ export default function App() {
                       alt={product.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
-
-                    {/* Category Indicator Tag */}
-                    <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-[#0B1F4D]">
-                      {product.category}
-                    </div>
                   </div>
 
                   {/* Content Core */}
                   <div className="p-6 flex-1 flex flex-col justify-between">
                     <div>
-                      {/* Stars and feedback */}
-                      <div className="flex items-center gap-1 text-amber-400 mb-2">
-                        <Icon name="star" className="w-4 h-4" />
-                        <span className="text-xs text-slate-800 font-bold">{product.rating}</span>
-                        <span className="text-slate-500 text-xs font-medium">({product.reviews} reviews)</span>
-                      </div>
-
-                      {/* Features list bullet pointers */}
-                      <div className="space-y-1.5 mb-6">
-                        {product.features.map((feat, i) => (
-                          <div key={i} className="flex items-center gap-2 text-xs font-semibold text-slate-700">
-                            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full shrink-0" />
-                            <span>{feat}</span>
-                          </div>
-                        ))}
-                      </div>
+                      <h3 className="font-bold text-base text-[#0B1F4D] mb-2">{product.name}</h3>
                     </div>
 
                     <div>
