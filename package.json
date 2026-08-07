@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build && node --input-type=module -e \"import fs from 'fs'; if (fs.existsSync('./dist/client/index.html')) fs.copyFileSync('./dist/client/index.html', './dist/index.html')\"",
+    "build": "astro build",
     "start": "node ./dist/server/entry.mjs",
     "preview": "astro preview",
     "astro": "astro"
