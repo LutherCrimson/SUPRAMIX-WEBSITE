@@ -7,9 +7,9 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build && node -e \"if (require('fs').existsSync('./dist/client')) require('fs').cpSync('./dist/client', './dist', {recursive: true})\"",
-    "preview": "astro preview",
+    "build": "astro build",
     "start": "node ./dist/server/entry.mjs",
+    "preview": "astro preview",
     "astro": "astro"
   },
   "dependencies": {
