@@ -1,16 +1,10 @@
-// server.js - Hostinger Node.js Production Server Entrypoint
+import { handler } from './dist/server/entry.mjs';
 import { createServer } from 'http';
-import { handler as ssrHandler } from './dist/server/entry.mjs';
 
-const port = process.env.PORT || 3000;
-const host = process.env.HOST || '0.0.0.0';
+const PORT = process.env.PORT || 3000;
 
-const server = createServer((req, res) => {
-  ssrHandler(req, res);
+const server = createServer(handler);
+
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
-
-server.listen(port, host, () => {
-  console.log(`Server running on http://${host}:${port}`);
-});
-
-export default server;
