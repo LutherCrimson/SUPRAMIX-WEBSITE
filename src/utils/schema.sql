@@ -145,6 +145,19 @@ ALTER TABLE public.about_section ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Public Read About Section" ON public.about_section;
 CREATE POLICY "Public Read About Section" ON public.about_section FOR SELECT USING (true);
 
+-- Enable RLS & Add Public Policies for products, projects, partners
+ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public Full Access Products" ON public.products;
+CREATE POLICY "Public Full Access Products" ON public.products FOR ALL USING (true) WITH CHECK (true);
+
+ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public Full Access Projects" ON public.projects;
+CREATE POLICY "Public Full Access Projects" ON public.projects FOR ALL USING (true) WITH CHECK (true);
+
+ALTER TABLE public.partners ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public Full Access Partners" ON public.partners;
+CREATE POLICY "Public Full Access Partners" ON public.partners FOR ALL USING (true) WITH CHECK (true);
+
 -- Seed About Section
 INSERT INTO public.about_section (id, badge_text, title, description, stat1_number, stat1_label, stat2_number, stat2_label, image_url, image_badge, image_caption)
 VALUES (

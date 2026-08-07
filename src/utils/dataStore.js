@@ -200,10 +200,14 @@ function setItem(key, value) {
   }
 }
 
-// Helper function to safely fetch JSON without throwing on HTML 404/500 responses
-async function safeFetchJson(url, options) {
+// Helper function to safely fetch JSON without throwing or hanging on slow/static endpoints
+async function safeFetchJson(url, options = {}) {
   try {
-    const res = await fetch(url, options);
+    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const timeoutId = controller ? setTimeout(() => controller.abort(), 1500) : null;
+    const fetchOptions = controller ? { ...options, signal: controller.signal } : options;
+    const res = await fetch(url, fetchOptions);
+    if (timeoutId) clearTimeout(timeoutId);
     const contentType = res.headers.get('content-type') || '';
     if (res.ok && contentType.includes('application/json')) {
       const json = await res.json();
@@ -218,8 +222,10 @@ async function safeFetchJson(url, options) {
 // --- PRODUCTS ---
 
 export async function getProductsAsync() {
+  const local = getItem(KEYS.PRODUCTS, null);
+
   const apiRes = await safeFetchJson('/api/admin/products');
-  if (apiRes.ok && apiRes.json.success && Array.isArray(apiRes.json.data)) {
+  if (apiRes.ok && apiRes.json.success && Array.isArray(apiRes.json.data) && apiRes.json.data.length > 0) {
     setItem(KEYS.PRODUCTS, apiRes.json.data);
     return apiRes.json.data;
   }
@@ -227,10 +233,10 @@ export async function getProductsAsync() {
   if (isSupabaseActive()) {
     try {
       const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
-      if (!error && Array.isArray(data)) {
+      if (!error && Array.isArray(data) && data.length > 0) {
         const formatted = data.map(p => ({
           ...p,
-          features: Array.isArray(p.features) ? p.features : (typeof p.features === 'string' ? JSON.parse(p.features) : [])
+          features: Array.isArray(p.features) ? p.features : (typeof p.features === 'string' ? (tryParseJson(p.features) || []) : [])
         }));
         setItem(KEYS.PRODUCTS, formatted);
         return formatted;
@@ -240,71 +246,84 @@ export async function getProductsAsync() {
     }
   }
 
-  const local = getItem(KEYS.PRODUCTS, null);
   return Array.isArray(local) ? local : defaultProducts;
+}
+
+function tryParseJson(str) {
+  try {
+    return JSON.parse(str);
+  } catch (e) {
+    return [];
+  }
 }
 
 export async function saveProductAsync(product) {
   const targetId = (product.id && String(product.id).trim()) ? String(product.id).trim() : 'prod-' + Date.now();
   const productToSave = { ...product, id: targetId };
 
-  const apiRes = await safeFetchJson('/api/admin/products', {
+  // 1. Save locally IMMEDIATELY for zero lag & instant response
+  const updatedLocal = saveProduct(productToSave);
+
+  // 2. Background sync to Server API or Supabase
+  safeFetchJson('/api/admin/products', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(productToSave)
-  });
-  if (apiRes.ok && apiRes.json.success) {
-    return saveProduct(productToSave);
-  }
-
-  if (isSupabaseActive()) {
-    try {
-      await supabase.from('products').upsert({
-        id: productToSave.id,
-        name: productToSave.name,
-        category: productToSave.category,
-        price: productToSave.price,
-        unit: productToSave.unit,
-        rating: productToSave.rating,
-        reviews: productToSave.reviews,
-        desc: productToSave.desc,
-        features: JSON.stringify(productToSave.features || []),
-        image: productToSave.image
-      });
-    } catch (err) {
-      console.warn('Supabase client upsert product error:', err);
+  }).then(async (apiRes) => {
+    if (!apiRes.ok && isSupabaseActive()) {
+      try {
+        const { error } = await supabase.from('products').upsert({
+          id: productToSave.id,
+          name: productToSave.name,
+          category: productToSave.category || '',
+          price: Number(productToSave.price) || 0,
+          unit: productToSave.unit || '',
+          rating: Number(productToSave.rating) || 5.0,
+          reviews: Number(productToSave.reviews) || 0,
+          desc: productToSave.desc || '',
+          features: Array.isArray(productToSave.features) ? productToSave.features : [],
+          image: productToSave.image || ''
+        });
+        if (error) console.warn('Supabase client upsert product error:', error.message);
+      } catch (err) {
+        console.warn('Supabase client upsert product error:', err);
+      }
     }
-  }
+  });
 
-  return saveProduct(productToSave);
+  return updatedLocal;
 }
 
 export async function deleteProductAsync(id) {
-  const apiRes = await safeFetchJson('/api/admin/products', {
+  // 1. Remove locally IMMEDIATELY for zero lag & instant response
+  const updatedLocal = deleteProduct(id);
+
+  // 2. Background sync to Server API or Supabase
+  safeFetchJson('/api/admin/products', {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ id })
-  });
-  if (apiRes.ok && apiRes.json.success) {
-    return deleteProduct(id);
-  }
-
-  if (isSupabaseActive()) {
-    try {
-      await supabase.from('products').delete().eq('id', id);
-    } catch (err) {
-      console.warn('Supabase client delete product error:', err);
+  }).then(async (apiRes) => {
+    if (!apiRes.ok && isSupabaseActive()) {
+      try {
+        const { error } = await supabase.from('products').delete().eq('id', id);
+        if (error) console.warn('Supabase client delete product error:', error.message);
+      } catch (err) {
+        console.warn('Supabase client delete product error:', err);
+      }
     }
-  }
+  });
 
-  return deleteProduct(id);
+  return updatedLocal;
 }
 
 // --- PROJECTS ---
 
 export async function getProjectsAsync() {
+  const local = getItem(KEYS.PROJECTS, null);
+
   const apiRes = await safeFetchJson('/api/admin/projects');
-  if (apiRes.ok && apiRes.json.success && Array.isArray(apiRes.json.data)) {
+  if (apiRes.ok && apiRes.json.success && Array.isArray(apiRes.json.data) && apiRes.json.data.length > 0) {
     setItem(KEYS.PROJECTS, apiRes.json.data);
     return apiRes.json.data;
   }
@@ -312,7 +331,7 @@ export async function getProjectsAsync() {
   if (isSupabaseActive()) {
     try {
       const { data, error } = await supabase.from('projects').select('*').order('created_at', { ascending: false });
-      if (!error && Array.isArray(data)) {
+      if (!error && Array.isArray(data) && data.length > 0) {
         const formatted = data.map(p => ({
           id: p.id,
           title: p.title,
@@ -332,7 +351,6 @@ export async function getProjectsAsync() {
     }
   }
 
-  const local = getItem(KEYS.PROJECTS, null);
   return Array.isArray(local) ? local : defaultProjects;
 }
 
@@ -340,62 +358,64 @@ export async function saveProjectAsync(project) {
   const targetId = (project.id && String(project.id).trim()) ? String(project.id).trim() : 'proj-' + Date.now();
   const projectToSave = { ...project, id: targetId };
 
-  const apiRes = await safeFetchJson('/api/admin/projects', {
+  const updatedLocal = saveProject(projectToSave);
+
+  safeFetchJson('/api/admin/projects', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(projectToSave)
-  });
-  if (apiRes.ok && apiRes.json.success) {
-    return saveProject(projectToSave);
-  }
-
-  if (isSupabaseActive()) {
-    try {
-      await supabase.from('projects').upsert({
-        id: projectToSave.id,
-        title: projectToSave.title,
-        client_name: projectToSave.clientName,
-        category: projectToSave.category,
-        materials_used: projectToSave.materialsUsed,
-        location: projectToSave.location,
-        year: projectToSave.year,
-        desc: projectToSave.desc,
-        image: projectToSave.image
-      });
-    } catch (err) {
-      console.warn('Supabase client upsert project error:', err);
+  }).then(async (apiRes) => {
+    if (!apiRes.ok && isSupabaseActive()) {
+      try {
+        const { error } = await supabase.from('projects').upsert({
+          id: projectToSave.id,
+          title: projectToSave.title,
+          client_name: projectToSave.clientName,
+          category: projectToSave.category,
+          materials_used: projectToSave.materialsUsed,
+          location: projectToSave.location,
+          year: projectToSave.year,
+          desc: projectToSave.desc,
+          image: projectToSave.image
+        });
+        if (error) console.warn('Supabase client upsert project error:', error.message);
+      } catch (err) {
+        console.warn('Supabase client upsert project error:', err);
+      }
     }
-  }
+  });
 
-  return saveProject(projectToSave);
+  return updatedLocal;
 }
 
 export async function deleteProjectAsync(id) {
-  const apiRes = await safeFetchJson('/api/admin/projects', {
+  const updatedLocal = deleteProject(id);
+
+  safeFetchJson('/api/admin/projects', {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ id })
-  });
-  if (apiRes.ok && apiRes.json.success) {
-    return deleteProject(id);
-  }
-
-  if (isSupabaseActive()) {
-    try {
-      await supabase.from('projects').delete().eq('id', id);
-    } catch (err) {
-      console.warn('Supabase client delete project error:', err);
+  }).then(async (apiRes) => {
+    if (!apiRes.ok && isSupabaseActive()) {
+      try {
+        const { error } = await supabase.from('projects').delete().eq('id', id);
+        if (error) console.warn('Supabase client delete project error:', error.message);
+      } catch (err) {
+        console.warn('Supabase client delete project error:', err);
+      }
     }
-  }
+  });
 
-  return deleteProject(id);
+  return updatedLocal;
 }
 
 // --- PARTNERS ---
 
 export async function getPartnersAsync() {
+  const local = getItem(KEYS.PARTNERS, null);
+
   const apiRes = await safeFetchJson('/api/admin/partners');
-  if (apiRes.ok && apiRes.json.success && Array.isArray(apiRes.json.data)) {
+  if (apiRes.ok && apiRes.json.success && Array.isArray(apiRes.json.data) && apiRes.json.data.length > 0) {
     setItem(KEYS.PARTNERS, apiRes.json.data);
     return apiRes.json.data;
   }
@@ -403,7 +423,7 @@ export async function getPartnersAsync() {
   if (isSupabaseActive()) {
     try {
       const { data, error } = await supabase.from('partners').select('*').order('created_at', { ascending: false });
-      if (!error && Array.isArray(data)) {
+      if (!error && Array.isArray(data) && data.length > 0) {
         const formatted = data.map(p => ({
           id: p.id,
           name: p.name,
@@ -421,7 +441,6 @@ export async function getPartnersAsync() {
     }
   }
 
-  const local = getItem(KEYS.PARTNERS, null);
   return Array.isArray(local) ? local : defaultPartners;
 }
 
@@ -429,53 +448,53 @@ export async function savePartnerAsync(partner) {
   const targetId = (partner.id && String(partner.id).trim()) ? String(partner.id).trim() : 'part-' + Date.now();
   const partnerToSave = { ...partner, id: targetId };
 
-  const apiRes = await safeFetchJson('/api/admin/partners', {
+  const updatedLocal = savePartner(partnerToSave);
+
+  safeFetchJson('/api/admin/partners', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(partnerToSave)
-  });
-  if (apiRes.ok && apiRes.json.success) {
-    return savePartner(partnerToSave);
-  }
-
-  if (isSupabaseActive()) {
-    try {
-      await supabase.from('partners').upsert({
-        id: partnerToSave.id,
-        name: partnerToSave.name,
-        short_name: partnerToSave.shortName,
-        sector: partnerToSave.sector,
-        description: partnerToSave.description,
-        logo: partnerToSave.logo,
-        website: partnerToSave.website
-      });
-    } catch (err) {
-      console.warn('Supabase client upsert partner error:', err);
+  }).then(async (apiRes) => {
+    if (!apiRes.ok && isSupabaseActive()) {
+      try {
+        const { error } = await supabase.from('partners').upsert({
+          id: partnerToSave.id,
+          name: partnerToSave.name,
+          short_name: partnerToSave.shortName,
+          sector: partnerToSave.sector,
+          description: partnerToSave.description,
+          logo: partnerToSave.logo,
+          website: partnerToSave.website
+        });
+        if (error) console.warn('Supabase client upsert partner error:', error.message);
+      } catch (err) {
+        console.warn('Supabase client upsert partner error:', err);
+      }
     }
-  }
+  });
 
-  return savePartner(partnerToSave);
+  return updatedLocal;
 }
 
 export async function deletePartnerAsync(id) {
-  const apiRes = await safeFetchJson('/api/admin/partners', {
+  const updatedLocal = deletePartner(id);
+
+  safeFetchJson('/api/admin/partners', {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ id })
-  });
-  if (apiRes.ok && apiRes.json.success) {
-    return deletePartner(id);
-  }
-
-  if (isSupabaseActive()) {
-    try {
-      await supabase.from('partners').delete().eq('id', id);
-    } catch (err) {
-      console.warn('Supabase client delete partner error:', err);
+  }).then(async (apiRes) => {
+    if (!apiRes.ok && isSupabaseActive()) {
+      try {
+        const { error } = await supabase.from('partners').delete().eq('id', id);
+        if (error) console.warn('Supabase client delete partner error:', error.message);
+      } catch (err) {
+        console.warn('Supabase client delete partner error:', err);
+      }
     }
-  }
+  });
 
-  return deletePartner(id);
+  return updatedLocal;
 }
 
 // --- PASSCODE / AUTH SERVER API ---
