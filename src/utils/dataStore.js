@@ -239,60 +239,13 @@ export async function getProductsAsync() {
   if (isSupabaseActive()) {
     try {
       const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
-      if (!error && Array.isArray(data)) {
-        if (data.length > 0) {
-          const formatted = data.map(p => ({
-            ...p,
-            features: Array.isArray(p.features) ? p.features : (typeof p.features === 'string' ? (tryParseJson(p.features) || []) : [])
-          }));
-
-          // If local browser has extra products, sync them to Supabase
-          if (Array.isArray(local) && local.length > 0) {
-            const supabaseIds = new Set(formatted.map(p => p.id));
-            const unsynced = local.filter(p => !supabaseIds.has(p.id));
-            if (unsynced.length > 0) {
-              unsynced.forEach(p => {
-                supabase.from('products').upsert({
-                  id: p.id,
-                  name: p.name,
-                  category: p.category || '',
-                  price: Number(p.price) || 0,
-                  unit: p.unit || '',
-                  rating: Number(p.rating) || 5.0,
-                  reviews: Number(p.reviews) || 0,
-                  desc: p.desc || '',
-                  features: Array.isArray(p.features) ? p.features : [],
-                  image: p.image || ''
-                }).catch(() => {});
-              });
-              const merged = [...unsynced, ...formatted];
-              setItem(KEYS.PRODUCTS, merged);
-              return merged;
-            }
-          }
-
-          setItem(KEYS.PRODUCTS, formatted);
-          return formatted;
-        } else {
-          // Supabase table is empty! Auto-seed Supabase with defaultProducts or local
-          const seedData = (Array.isArray(local) && local.length > 0) ? local : defaultProducts;
-          seedData.forEach(p => {
-            supabase.from('products').upsert({
-              id: p.id,
-              name: p.name,
-              category: p.category || '',
-              price: Number(p.price) || 0,
-              unit: p.unit || '',
-              rating: Number(p.rating) || 5.0,
-              reviews: Number(p.reviews) || 0,
-              desc: p.desc || '',
-              features: Array.isArray(p.features) ? p.features : [],
-              image: p.image || ''
-            }).catch(() => {});
-          });
-          setItem(KEYS.PRODUCTS, seedData);
-          return seedData;
-        }
+      if (!error && Array.isArray(data) && data.length > 0) {
+        const formatted = data.map(p => ({
+          ...p,
+          features: Array.isArray(p.features) ? p.features : (typeof p.features === 'string' ? (tryParseJson(p.features) || []) : [])
+        }));
+        setItem(KEYS.PRODUCTS, formatted);
+        return formatted;
       }
     } catch (err) {
       console.warn('Supabase client fetch products error:', err);
@@ -300,12 +253,14 @@ export async function getProductsAsync() {
   }
 
   const apiRes = await safeFetchJson('/api/admin/products');
-  if (apiRes.ok && apiRes.json.success && Array.isArray(apiRes.json.data) && apiRes.json.data.length > 0) {
+  if (apiRes.ok && apiRes.json && apiRes.json.success && Array.isArray(apiRes.json.data) && apiRes.json.data.length > 0) {
     setItem(KEYS.PRODUCTS, apiRes.json.data);
     return apiRes.json.data;
   }
 
-  return (Array.isArray(local) && local.length > 0) ? local : defaultProducts;
+  const validLocal = (Array.isArray(local) && local.length > 0) ? local : defaultProducts;
+  setItem(KEYS.PRODUCTS, validLocal);
+  return validLocal;
 }
 
 function tryParseJson(str) {
@@ -386,64 +341,20 @@ export async function getProjectsAsync() {
   if (isSupabaseActive()) {
     try {
       const { data, error } = await supabase.from('projects').select('*').order('created_at', { ascending: false });
-      if (!error && Array.isArray(data)) {
-        if (data.length > 0) {
-          const formatted = data.map(p => ({
-            id: p.id,
-            title: p.title,
-            clientName: p.client_name,
-            category: p.category,
-            materialsUsed: p.materials_used,
-            location: p.location,
-            year: p.year,
-            desc: p.desc,
-            image: p.image
-          }));
-
-          if (Array.isArray(local) && local.length > 0) {
-            const supabaseIds = new Set(formatted.map(p => p.id));
-            const unsynced = local.filter(p => !supabaseIds.has(p.id));
-            if (unsynced.length > 0) {
-              unsynced.forEach(p => {
-                supabase.from('projects').upsert({
-                  id: p.id,
-                  title: p.title,
-                  client_name: p.clientName,
-                  category: p.category,
-                  materials_used: p.materialsUsed,
-                  location: p.location,
-                  year: p.year,
-                  desc: p.desc,
-                  image: p.image
-                }).catch(() => {});
-              });
-              const merged = [...unsynced, ...formatted];
-              setItem(KEYS.PROJECTS, merged);
-              return merged;
-            }
-          }
-
-          setItem(KEYS.PROJECTS, formatted);
-          return formatted;
-        } else {
-          // Supabase is empty! Auto-seed Supabase with defaultProjects
-          const seedData = (Array.isArray(local) && local.length > 0) ? local : defaultProjects;
-          seedData.forEach(p => {
-            supabase.from('projects').upsert({
-              id: p.id,
-              title: p.title,
-              client_name: p.clientName,
-              category: p.category,
-              materials_used: p.materialsUsed,
-              location: p.location,
-              year: p.year,
-              desc: p.desc,
-              image: p.image
-            }).catch(() => {});
-          });
-          setItem(KEYS.PROJECTS, seedData);
-          return seedData;
-        }
+      if (!error && Array.isArray(data) && data.length > 0) {
+        const formatted = data.map(p => ({
+          id: p.id,
+          title: p.title,
+          clientName: p.client_name,
+          category: p.category,
+          materialsUsed: p.materials_used,
+          location: p.location,
+          year: p.year,
+          desc: p.desc,
+          image: p.image
+        }));
+        setItem(KEYS.PROJECTS, formatted);
+        return formatted;
       }
     } catch (err) {
       console.warn('Supabase client fetch projects error:', err);
@@ -451,12 +362,14 @@ export async function getProjectsAsync() {
   }
 
   const apiRes = await safeFetchJson('/api/admin/projects');
-  if (apiRes.ok && apiRes.json.success && Array.isArray(apiRes.json.data) && apiRes.json.data.length > 0) {
+  if (apiRes.ok && apiRes.json && apiRes.json.success && Array.isArray(apiRes.json.data) && apiRes.json.data.length > 0) {
     setItem(KEYS.PROJECTS, apiRes.json.data);
     return apiRes.json.data;
   }
 
-  return (Array.isArray(local) && local.length > 0) ? local : defaultProjects;
+  const validLocal = (Array.isArray(local) && local.length > 0) ? local : defaultProjects;
+  setItem(KEYS.PROJECTS, validLocal);
+  return validLocal;
 }
 
 export async function saveProjectAsync(project) {
@@ -522,58 +435,18 @@ export async function getPartnersAsync() {
   if (isSupabaseActive()) {
     try {
       const { data, error } = await supabase.from('partners').select('*').order('created_at', { ascending: false });
-      if (!error && Array.isArray(data)) {
-        if (data.length > 0) {
-          const formatted = data.map(p => ({
-            id: p.id,
-            name: p.name,
-            shortName: p.short_name,
-            sector: p.sector,
-            description: p.description,
-            logo: p.logo,
-            website: p.website
-          }));
-
-          if (Array.isArray(local) && local.length > 0) {
-            const supabaseIds = new Set(formatted.map(p => p.id));
-            const unsynced = local.filter(p => !supabaseIds.has(p.id));
-            if (unsynced.length > 0) {
-              unsynced.forEach(p => {
-                supabase.from('partners').upsert({
-                  id: p.id,
-                  name: p.name,
-                  short_name: p.shortName,
-                  sector: p.sector,
-                  description: p.description,
-                  logo: p.logo,
-                  website: p.website
-                }).catch(() => {});
-              });
-              const merged = [...unsynced, ...formatted];
-              setItem(KEYS.PARTNERS, merged);
-              return merged;
-            }
-          }
-
-          setItem(KEYS.PARTNERS, formatted);
-          return formatted;
-        } else {
-          // Supabase is empty! Auto-seed Supabase with defaultPartners
-          const seedData = (Array.isArray(local) && local.length > 0) ? local : defaultPartners;
-          seedData.forEach(p => {
-            supabase.from('partners').upsert({
-              id: p.id,
-              name: p.name,
-              short_name: p.shortName,
-              sector: p.sector,
-              description: p.description,
-              logo: p.logo,
-              website: p.website
-            }).catch(() => {});
-          });
-          setItem(KEYS.PARTNERS, seedData);
-          return seedData;
-        }
+      if (!error && Array.isArray(data) && data.length > 0) {
+        const formatted = data.map(p => ({
+          id: p.id,
+          name: p.name,
+          shortName: p.short_name,
+          sector: p.sector,
+          description: p.description,
+          logo: p.logo,
+          website: p.website
+        }));
+        setItem(KEYS.PARTNERS, formatted);
+        return formatted;
       }
     } catch (err) {
       console.warn('Supabase client fetch partners error:', err);
@@ -581,12 +454,14 @@ export async function getPartnersAsync() {
   }
 
   const apiRes = await safeFetchJson('/api/admin/partners');
-  if (apiRes.ok && apiRes.json.success && Array.isArray(apiRes.json.data) && apiRes.json.data.length > 0) {
+  if (apiRes.ok && apiRes.json && apiRes.json.success && Array.isArray(apiRes.json.data) && apiRes.json.data.length > 0) {
     setItem(KEYS.PARTNERS, apiRes.json.data);
     return apiRes.json.data;
   }
 
-  return (Array.isArray(local) && local.length > 0) ? local : defaultPartners;
+  const validLocal = (Array.isArray(local) && local.length > 0) ? local : defaultPartners;
+  setItem(KEYS.PARTNERS, validLocal);
+  return validLocal;
 }
 
 export async function savePartnerAsync(partner) {
