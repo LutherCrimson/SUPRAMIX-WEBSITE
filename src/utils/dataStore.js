@@ -238,7 +238,7 @@ export async function getProductsAsync() {
 
   if (isSupabaseActive()) {
     try {
-      const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('products').select('*');
       if (!error && Array.isArray(data) && data.length > 0) {
         const formatted = data.map(p => ({
           ...p,
@@ -340,7 +340,7 @@ export async function getProjectsAsync() {
 
   if (isSupabaseActive()) {
     try {
-      const { data, error } = await supabase.from('projects').select('*').order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('projects').select('*');
       if (!error && Array.isArray(data) && data.length > 0) {
         const formatted = data.map(p => ({
           id: p.id,
@@ -434,7 +434,7 @@ export async function getPartnersAsync() {
 
   if (isSupabaseActive()) {
     try {
-      const { data, error } = await supabase.from('partners').select('*').order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('partners').select('*');
       if (!error && Array.isArray(data) && data.length > 0) {
         const formatted = data.map(p => ({
           id: p.id,
