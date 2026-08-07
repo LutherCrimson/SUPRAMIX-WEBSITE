@@ -678,6 +678,7 @@ export function resetAllDataToDefault() {
   setItem(KEYS.PROJECTS, defaultProjects);
   setItem(KEYS.PARTNERS, defaultPartners);
   setItem(KEYS.ABOUT, defaultAboutSection);
+  setItem(KEYS.MAINTENANCE, defaultMaintenanceConfig);
 }
 
 export async function resetAllDataToDefaultAsync() {
@@ -729,6 +730,12 @@ export async function resetAllDataToDefaultAsync() {
       await supabase.from('about_section').upsert({
         ...defaultAboutSection,
         id: 'about-main'
+      });
+
+      await supabase.from('site_settings').upsert({
+        key: 'maintenance',
+        value: defaultMaintenanceConfig,
+        updated_at: new Date().toISOString()
       });
     } catch (e) {
       console.warn('Supabase reset error:', e);
