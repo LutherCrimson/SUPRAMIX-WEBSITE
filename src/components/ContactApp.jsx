@@ -493,7 +493,7 @@ export default function ContactApp() {
               <h4 className="text-white text-xs font-bold uppercase tracking-widest mb-6 border-b border-white/5 pb-2">Material Utama</h4>
               <ul className="space-y-3 text-xs">
                 <li><a href="/#products" className="hover:text-white transition-colors">Bitumen Membrane</a></li>
-                <li><a href="/#products" className="hover:text-white transition-colors">Thermal Insul Batts</a></li>
+                <li><a href="/#products" className="hover:text-white transition-colors">Thermal Insulation</a></li>
                 <li><a href="/#products" className="hover:text-white transition-colors">Acoustic Viscoelastic</a></li>
                 <li><a href="/#products" className="hover:text-white transition-colors">PyroBlock Core Armour</a></li>
               </ul>

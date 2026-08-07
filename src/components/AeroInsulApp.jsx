@@ -1110,7 +1110,7 @@ export default function App() {
                       className="hover:text-white transition-colors"
                       onClick={() => triggerNotification(`Browsing specs for: ${prod.name}`)}
                     >
-                      {prod.name.split(' ')[0]} Batts
+                      {prod.name}
                     </a>
                   </li>
                 ))}
