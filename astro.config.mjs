@@ -21,6 +21,9 @@ customLogger.warn = (msg, options) => {
 
 export default defineConfig({
   output: 'static',
+  adapter: node({
+    mode: 'middleware'
+  }),
   integrations: [react()],
 
   vite: {

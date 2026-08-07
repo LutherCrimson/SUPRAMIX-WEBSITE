@@ -1,4 +1,6 @@
 // src/pages/api/admin/partners.js
+export const prerender = false;
+
 import { supabaseServer, isServerSupabaseConfigured } from '../../../utils/supabaseServer';
 
 export async function GET() {
