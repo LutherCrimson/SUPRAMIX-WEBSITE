@@ -334,7 +334,13 @@ export default function ClientsApp() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                     </svg>
                   </h3>
-                  <p className="text-xs font-extrabold text-slate-400 mb-6 tracking-wide">{client.shortName}</p>
+                  <p className="text-xs font-extrabold text-slate-400 mb-3 tracking-wide">{client.shortName}</p>
+
+                  {client.description && (
+                    <p className="text-xs text-slate-600 font-medium mb-4 leading-relaxed line-clamp-2">
+                      {client.description}
+                    </p>
+                  )}
 
                   <div className="space-y-4">
                     <div>
@@ -537,6 +543,14 @@ export default function ClientsApp() {
 
             {/* Modal Body Content */}
             <div className="p-6 md:p-8 space-y-6">
+              {selectedClient.description && (
+                <div>
+                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-2">Deskripsi Kerjasama & Proyek:</h4>
+                  <p className="text-sm text-slate-700 leading-relaxed font-medium bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    {selectedClient.description}
+                  </p>
+                </div>
+              )}
 
 
 
