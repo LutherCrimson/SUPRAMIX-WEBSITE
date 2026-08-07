@@ -125,14 +125,23 @@ export default function AdminDashboard() {
   // Load data
   const loadAllData = async () => {
     setIsDbActive(isSupabaseActive());
-    const prods = await getProductsAsync();
-    const projs = await getProjectsAsync();
-    const parts = await getPartnersAsync();
-    const aboutData = await getAboutSectionAsync();
-    const maintData = await getMaintenanceAsync();
+    let prods = await getProductsAsync();
+    let projs = await getProjectsAsync();
+    let parts = await getPartnersAsync();
+
+    // Auto-seed protection: If any dataset returns empty array, auto-inject default catalog immediately!
+    if (!prods || prods.length === 0 || !projs || projs.length === 0 || !parts || parts.length === 0) {
+      await resetAllDataToDefaultAsync();
+      prods = await getProductsAsync();
+      projs = await getProjectsAsync();
+      parts = await getPartnersAsync();
+    }
+
     setProducts(prods);
     setProjects(projs);
     setPartners(parts);
+    const aboutData = await getAboutSectionAsync();
+    const maintData = await getMaintenanceAsync();
     if (aboutData) setAboutForm(aboutData);
     if (maintData) setMaintenanceForm(maintData);
   };

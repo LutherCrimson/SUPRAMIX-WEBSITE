@@ -235,17 +235,37 @@ async function safeFetchJson(url, options = {}) {
 
 export async function getProductsAsync() {
   const local = getItem(KEYS.PRODUCTS, null);
+  const validFallback = (Array.isArray(local) && local.length > 0) ? local : defaultProducts;
 
   if (isSupabaseActive()) {
     try {
       const { data, error } = await supabase.from('products').select('*');
-      if (!error && Array.isArray(data) && data.length > 0) {
-        const formatted = data.map(p => ({
-          ...p,
-          features: Array.isArray(p.features) ? p.features : (typeof p.features === 'string' ? (tryParseJson(p.features) || []) : [])
-        }));
-        setItem(KEYS.PRODUCTS, formatted);
-        return formatted;
+      if (!error && Array.isArray(data)) {
+        if (data.length > 0) {
+          const formatted = data.map(p => ({
+            ...p,
+            features: Array.isArray(p.features) ? p.features : (typeof p.features === 'string' ? (tryParseJson(p.features) || []) : [])
+          }));
+          setItem(KEYS.PRODUCTS, formatted);
+          return formatted;
+        } else {
+          validFallback.forEach(p => {
+            supabase.from('products').upsert({
+              id: p.id,
+              name: p.name,
+              category: p.category || '',
+              price: Number(p.price) || 0,
+              unit: p.unit || '',
+              rating: Number(p.rating) || 5.0,
+              reviews: Number(p.reviews) || 0,
+              desc: p.desc || '',
+              features: Array.isArray(p.features) ? p.features : [],
+              image: p.image || ''
+            }).catch(() => {});
+          });
+          setItem(KEYS.PRODUCTS, validFallback);
+          return validFallback;
+        }
       }
     } catch (err) {
       console.warn('Supabase client fetch products error:', err);
@@ -258,9 +278,8 @@ export async function getProductsAsync() {
     return apiRes.json.data;
   }
 
-  const validLocal = (Array.isArray(local) && local.length > 0) ? local : defaultProducts;
-  setItem(KEYS.PRODUCTS, validLocal);
-  return validLocal;
+  setItem(KEYS.PRODUCTS, validFallback);
+  return validFallback;
 }
 
 function tryParseJson(str) {
@@ -337,24 +356,43 @@ export async function deleteProductAsync(id) {
 
 export async function getProjectsAsync() {
   const local = getItem(KEYS.PROJECTS, null);
+  const validFallback = (Array.isArray(local) && local.length > 0) ? local : defaultProjects;
 
   if (isSupabaseActive()) {
     try {
       const { data, error } = await supabase.from('projects').select('*');
-      if (!error && Array.isArray(data) && data.length > 0) {
-        const formatted = data.map(p => ({
-          id: p.id,
-          title: p.title,
-          clientName: p.client_name,
-          category: p.category,
-          materialsUsed: p.materials_used,
-          location: p.location,
-          year: p.year,
-          desc: p.desc,
-          image: p.image
-        }));
-        setItem(KEYS.PROJECTS, formatted);
-        return formatted;
+      if (!error && Array.isArray(data)) {
+        if (data.length > 0) {
+          const formatted = data.map(p => ({
+            id: p.id,
+            title: p.title,
+            clientName: p.client_name,
+            category: p.category,
+            materialsUsed: p.materials_used,
+            location: p.location,
+            year: p.year,
+            desc: p.desc,
+            image: p.image
+          }));
+          setItem(KEYS.PROJECTS, formatted);
+          return formatted;
+        } else {
+          validFallback.forEach(p => {
+            supabase.from('projects').upsert({
+              id: p.id,
+              title: p.title,
+              client_name: p.clientName,
+              category: p.category,
+              materials_used: p.materialsUsed,
+              location: p.location,
+              year: p.year,
+              desc: p.desc,
+              image: p.image
+            }).catch(() => {});
+          });
+          setItem(KEYS.PROJECTS, validFallback);
+          return validFallback;
+        }
       }
     } catch (err) {
       console.warn('Supabase client fetch projects error:', err);
@@ -367,9 +405,8 @@ export async function getProjectsAsync() {
     return apiRes.json.data;
   }
 
-  const validLocal = (Array.isArray(local) && local.length > 0) ? local : defaultProjects;
-  setItem(KEYS.PROJECTS, validLocal);
-  return validLocal;
+  setItem(KEYS.PROJECTS, validFallback);
+  return validFallback;
 }
 
 export async function saveProjectAsync(project) {
@@ -431,22 +468,39 @@ export async function deleteProjectAsync(id) {
 
 export async function getPartnersAsync() {
   const local = getItem(KEYS.PARTNERS, null);
+  const validFallback = (Array.isArray(local) && local.length > 0) ? local : defaultPartners;
 
   if (isSupabaseActive()) {
     try {
       const { data, error } = await supabase.from('partners').select('*');
-      if (!error && Array.isArray(data) && data.length > 0) {
-        const formatted = data.map(p => ({
-          id: p.id,
-          name: p.name,
-          shortName: p.short_name,
-          sector: p.sector,
-          description: p.description,
-          logo: p.logo,
-          website: p.website
-        }));
-        setItem(KEYS.PARTNERS, formatted);
-        return formatted;
+      if (!error && Array.isArray(data)) {
+        if (data.length > 0) {
+          const formatted = data.map(p => ({
+            id: p.id,
+            name: p.name,
+            shortName: p.short_name,
+            sector: p.sector,
+            description: p.description,
+            logo: p.logo,
+            website: p.website
+          }));
+          setItem(KEYS.PARTNERS, formatted);
+          return formatted;
+        } else {
+          validFallback.forEach(p => {
+            supabase.from('partners').upsert({
+              id: p.id,
+              name: p.name,
+              short_name: p.shortName,
+              sector: p.sector,
+              description: p.description,
+              logo: p.logo,
+              website: p.website
+            }).catch(() => {});
+          });
+          setItem(KEYS.PARTNERS, validFallback);
+          return validFallback;
+        }
       }
     } catch (err) {
       console.warn('Supabase client fetch partners error:', err);
@@ -459,9 +513,8 @@ export async function getPartnersAsync() {
     return apiRes.json.data;
   }
 
-  const validLocal = (Array.isArray(local) && local.length > 0) ? local : defaultPartners;
-  setItem(KEYS.PARTNERS, validLocal);
-  return validLocal;
+  setItem(KEYS.PARTNERS, validFallback);
+  return validFallback;
 }
 
 export async function savePartnerAsync(partner) {
