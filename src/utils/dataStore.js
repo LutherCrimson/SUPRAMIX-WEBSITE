@@ -394,8 +394,47 @@ export async function getProjectsAsync() {
           desc: p.desc,
           image: p.image
         }));
+
+        if (Array.isArray(local) && local.length > 0) {
+          const supabaseIds = new Set(formatted.map(p => p.id));
+          const unsynced = local.filter(p => !supabaseIds.has(p.id));
+          if (unsynced.length > 0) {
+            unsynced.forEach(p => {
+              supabase.from('projects').upsert({
+                id: p.id,
+                title: p.title,
+                client_name: p.clientName,
+                category: p.category,
+                materials_used: p.materialsUsed,
+                location: p.location,
+                year: p.year,
+                desc: p.desc,
+                image: p.image
+              }).catch(() => {});
+            });
+            const merged = [...unsynced, ...formatted];
+            setItem(KEYS.PROJECTS, merged);
+            return merged;
+          }
+        }
+
         setItem(KEYS.PROJECTS, formatted);
         return formatted;
+      } else if (Array.isArray(local) && local.length > 0) {
+        local.forEach(p => {
+          supabase.from('projects').upsert({
+            id: p.id,
+            title: p.title,
+            client_name: p.clientName,
+            category: p.category,
+            materials_used: p.materialsUsed,
+            location: p.location,
+            year: p.year,
+            desc: p.desc,
+            image: p.image
+          }).catch(() => {});
+        });
+        return local;
       }
     } catch (err) {
       console.warn('Supabase client fetch projects error:', err);
@@ -408,7 +447,7 @@ export async function getProjectsAsync() {
     return apiRes.json.data;
   }
 
-  return Array.isArray(local) ? local : defaultProjects;
+  return (Array.isArray(local) && local.length > 0) ? local : defaultProjects;
 }
 
 export async function saveProjectAsync(project) {
@@ -484,8 +523,43 @@ export async function getPartnersAsync() {
           logo: p.logo,
           website: p.website
         }));
+
+        if (Array.isArray(local) && local.length > 0) {
+          const supabaseIds = new Set(formatted.map(p => p.id));
+          const unsynced = local.filter(p => !supabaseIds.has(p.id));
+          if (unsynced.length > 0) {
+            unsynced.forEach(p => {
+              supabase.from('partners').upsert({
+                id: p.id,
+                name: p.name,
+                short_name: p.shortName,
+                sector: p.sector,
+                description: p.description,
+                logo: p.logo,
+                website: p.website
+              }).catch(() => {});
+            });
+            const merged = [...unsynced, ...formatted];
+            setItem(KEYS.PARTNERS, merged);
+            return merged;
+          }
+        }
+
         setItem(KEYS.PARTNERS, formatted);
         return formatted;
+      } else if (Array.isArray(local) && local.length > 0) {
+        local.forEach(p => {
+          supabase.from('partners').upsert({
+            id: p.id,
+            name: p.name,
+            short_name: p.shortName,
+            sector: p.sector,
+            description: p.description,
+            logo: p.logo,
+            website: p.website
+          }).catch(() => {});
+        });
+        return local;
       }
     } catch (err) {
       console.warn('Supabase client fetch partners error:', err);
@@ -498,7 +572,7 @@ export async function getPartnersAsync() {
     return apiRes.json.data;
   }
 
-  return Array.isArray(local) ? local : defaultPartners;
+  return (Array.isArray(local) && local.length > 0) ? local : defaultPartners;
 }
 
 export async function savePartnerAsync(partner) {
