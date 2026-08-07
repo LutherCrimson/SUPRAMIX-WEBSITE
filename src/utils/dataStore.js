@@ -49,7 +49,7 @@ export const defaultProducts = [
     reviews: 50,
     desc: 'High performance water-based bitumen primer coat for surface preparation before membrane installation.',
     features: ['Superior adhesion', 'Fast drying formula', 'Eco-friendly water based'],
-    image: '/products/prime-coat-wb.jpg'
+    image: '/Projects/sph1.jpeg'
   },
   {
     id: 'supramix-sand-3mm',
@@ -73,7 +73,7 @@ export const defaultProducts = [
     reviews: 42,
     desc: 'APP modified bitumen waterproofing membrane with grey mineral granule finish for exposed roofing applications.',
     features: ['Exposed roof protection', 'Granule weather shield', 'Thermal reflection'],
-    image: '/products/app-sand-membrane.jpg'
+    image: '/Projects/binus1.jpeg'
   },
   {
     id: 'supramix-granule-green-3mm',
@@ -85,7 +85,7 @@ export const defaultProducts = [
     reviews: 38,
     desc: 'APP modified bitumen waterproofing membrane with green mineral granule surface for aesthetic roof gardens & exposed decks.',
     features: ['Green aesthetic finish', 'Aesthetic roofing option', 'Heavy-duty durability'],
-    image: '/products/basalt-spring-green.jpg'
+    image: '/Projects/kesehatan1.jpeg'
   },
   {
     id: 'supramix-pe-film-3mm',
@@ -97,7 +97,7 @@ export const defaultProducts = [
     reviews: 55,
     desc: 'Polyethylene film finished APP modified bituminous membrane designed for double-layer roofing and underground tanking.',
     features: ['PE Film finish', 'Flexible installation', 'Heavy duty tanking'],
-    image: '/products/app-pe-membrane.jpg'
+    image: '/Projects/sunter1.jpeg'
   }
 ];
 
