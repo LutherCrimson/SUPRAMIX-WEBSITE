@@ -805,6 +805,64 @@ export function resetAllDataToDefault() {
   setItem(KEYS.ABOUT, defaultAboutSection);
 }
 
+export async function resetAllDataToDefaultAsync() {
+  resetAllDataToDefault();
+
+  if (isSupabaseActive()) {
+    try {
+      await Promise.all(defaultProducts.map(p =>
+        supabase.from('products').upsert({
+          id: p.id,
+          name: p.name,
+          category: p.category || '',
+          price: Number(p.price) || 0,
+          unit: p.unit || '',
+          rating: Number(p.rating) || 5.0,
+          reviews: Number(p.reviews) || 0,
+          desc: p.desc || '',
+          features: Array.isArray(p.features) ? p.features : [],
+          image: p.image || ''
+        })
+      ));
+
+      await Promise.all(defaultProjects.map(p =>
+        supabase.from('projects').upsert({
+          id: p.id,
+          title: p.title,
+          client_name: p.clientName,
+          category: p.category,
+          materials_used: p.materialsUsed,
+          location: p.location,
+          year: p.year,
+          desc: p.desc,
+          image: p.image
+        })
+      ));
+
+      await Promise.all(defaultPartners.map(p =>
+        supabase.from('partners').upsert({
+          id: p.id,
+          name: p.name,
+          short_name: p.shortName,
+          sector: p.sector,
+          description: p.description,
+          logo: p.logo,
+          website: p.website
+        })
+      ));
+
+      await supabase.from('about_section').upsert({
+        ...defaultAboutSection,
+        id: 'about-main'
+      });
+    } catch (e) {
+      console.warn('Supabase reset error:', e);
+    }
+  }
+
+  return { success: true };
+}
+
 // --- ABOUT SECTION ASYNC & LOCAL FUNCTIONS ---
 
 export async function getAboutSectionAsync() {

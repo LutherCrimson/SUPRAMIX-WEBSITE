@@ -59,6 +59,7 @@ import {
   exportAllData,
   importAllData,
   resetAllDataToDefault,
+  resetAllDataToDefaultAsync,
   isSupabaseActive
 } from '../utils/dataStore';
 
@@ -291,10 +292,10 @@ export default function AdminDashboard() {
   };
 
   const handleReset = async () => {
-    if (confirm('PERINGATAN: Ini akan mengembalikan seluruh data produk, project, dan partner ke data awal (default). Lanjutkan?')) {
-      resetAllDataToDefault();
+    if (confirm('PERINGATAN: Ini akan mengisikan & mengembalikan seluruh data produk, project, dan partner ke database Supabase Cloud & Local. Lanjutkan?')) {
+      await resetAllDataToDefaultAsync();
       await loadAllData();
-      notify('Data telah dikembalikan ke standar default.');
+      notify('Data telah berhasil di-inject & di-sync ke Supabase Cloud!');
     }
   };
 
