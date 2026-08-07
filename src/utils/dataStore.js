@@ -239,56 +239,60 @@ export async function getProductsAsync() {
   if (isSupabaseActive()) {
     try {
       const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
-      if (!error && Array.isArray(data) && data.length > 0) {
-        const formatted = data.map(p => ({
-          ...p,
-          features: Array.isArray(p.features) ? p.features : (typeof p.features === 'string' ? (tryParseJson(p.features) || []) : [])
-        }));
+      if (!error && Array.isArray(data)) {
+        if (data.length > 0) {
+          const formatted = data.map(p => ({
+            ...p,
+            features: Array.isArray(p.features) ? p.features : (typeof p.features === 'string' ? (tryParseJson(p.features) || []) : [])
+          }));
 
-        // If local browser has extra products, sync them to Supabase
-        if (Array.isArray(local) && local.length > 0) {
-          const supabaseIds = new Set(formatted.map(p => p.id));
-          const unsynced = local.filter(p => !supabaseIds.has(p.id));
-          if (unsynced.length > 0) {
-            unsynced.forEach(p => {
-              supabase.from('products').upsert({
-                id: p.id,
-                name: p.name,
-                category: p.category || '',
-                price: Number(p.price) || 0,
-                unit: p.unit || '',
-                rating: Number(p.rating) || 5.0,
-                reviews: Number(p.reviews) || 0,
-                desc: p.desc || '',
-                features: Array.isArray(p.features) ? p.features : [],
-                image: p.image || ''
-              }).catch(() => {});
-            });
-            const merged = [...unsynced, ...formatted];
-            setItem(KEYS.PRODUCTS, merged);
-            return merged;
+          // If local browser has extra products, sync them to Supabase
+          if (Array.isArray(local) && local.length > 0) {
+            const supabaseIds = new Set(formatted.map(p => p.id));
+            const unsynced = local.filter(p => !supabaseIds.has(p.id));
+            if (unsynced.length > 0) {
+              unsynced.forEach(p => {
+                supabase.from('products').upsert({
+                  id: p.id,
+                  name: p.name,
+                  category: p.category || '',
+                  price: Number(p.price) || 0,
+                  unit: p.unit || '',
+                  rating: Number(p.rating) || 5.0,
+                  reviews: Number(p.reviews) || 0,
+                  desc: p.desc || '',
+                  features: Array.isArray(p.features) ? p.features : [],
+                  image: p.image || ''
+                }).catch(() => {});
+              });
+              const merged = [...unsynced, ...formatted];
+              setItem(KEYS.PRODUCTS, merged);
+              return merged;
+            }
           }
-        }
 
-        setItem(KEYS.PRODUCTS, formatted);
-        return formatted;
-      } else if (Array.isArray(local) && local.length > 0) {
-        // If Supabase returned 0 rows but local has products, sync local products to Supabase
-        local.forEach(p => {
-          supabase.from('products').upsert({
-            id: p.id,
-            name: p.name,
-            category: p.category || '',
-            price: Number(p.price) || 0,
-            unit: p.unit || '',
-            rating: Number(p.rating) || 5.0,
-            reviews: Number(p.reviews) || 0,
-            desc: p.desc || '',
-            features: Array.isArray(p.features) ? p.features : [],
-            image: p.image || ''
-          }).catch(() => {});
-        });
-        return local;
+          setItem(KEYS.PRODUCTS, formatted);
+          return formatted;
+        } else {
+          // Supabase table is empty! Auto-seed Supabase with defaultProducts or local
+          const seedData = (Array.isArray(local) && local.length > 0) ? local : defaultProducts;
+          seedData.forEach(p => {
+            supabase.from('products').upsert({
+              id: p.id,
+              name: p.name,
+              category: p.category || '',
+              price: Number(p.price) || 0,
+              unit: p.unit || '',
+              rating: Number(p.rating) || 5.0,
+              reviews: Number(p.reviews) || 0,
+              desc: p.desc || '',
+              features: Array.isArray(p.features) ? p.features : [],
+              image: p.image || ''
+            }).catch(() => {});
+          });
+          setItem(KEYS.PRODUCTS, seedData);
+          return seedData;
+        }
       }
     } catch (err) {
       console.warn('Supabase client fetch products error:', err);
@@ -382,59 +386,64 @@ export async function getProjectsAsync() {
   if (isSupabaseActive()) {
     try {
       const { data, error } = await supabase.from('projects').select('*').order('created_at', { ascending: false });
-      if (!error && Array.isArray(data) && data.length > 0) {
-        const formatted = data.map(p => ({
-          id: p.id,
-          title: p.title,
-          clientName: p.client_name,
-          category: p.category,
-          materialsUsed: p.materials_used,
-          location: p.location,
-          year: p.year,
-          desc: p.desc,
-          image: p.image
-        }));
-
-        if (Array.isArray(local) && local.length > 0) {
-          const supabaseIds = new Set(formatted.map(p => p.id));
-          const unsynced = local.filter(p => !supabaseIds.has(p.id));
-          if (unsynced.length > 0) {
-            unsynced.forEach(p => {
-              supabase.from('projects').upsert({
-                id: p.id,
-                title: p.title,
-                client_name: p.clientName,
-                category: p.category,
-                materials_used: p.materialsUsed,
-                location: p.location,
-                year: p.year,
-                desc: p.desc,
-                image: p.image
-              }).catch(() => {});
-            });
-            const merged = [...unsynced, ...formatted];
-            setItem(KEYS.PROJECTS, merged);
-            return merged;
-          }
-        }
-
-        setItem(KEYS.PROJECTS, formatted);
-        return formatted;
-      } else if (Array.isArray(local) && local.length > 0) {
-        local.forEach(p => {
-          supabase.from('projects').upsert({
+      if (!error && Array.isArray(data)) {
+        if (data.length > 0) {
+          const formatted = data.map(p => ({
             id: p.id,
             title: p.title,
-            client_name: p.clientName,
+            clientName: p.client_name,
             category: p.category,
-            materials_used: p.materialsUsed,
+            materialsUsed: p.materials_used,
             location: p.location,
             year: p.year,
             desc: p.desc,
             image: p.image
-          }).catch(() => {});
-        });
-        return local;
+          }));
+
+          if (Array.isArray(local) && local.length > 0) {
+            const supabaseIds = new Set(formatted.map(p => p.id));
+            const unsynced = local.filter(p => !supabaseIds.has(p.id));
+            if (unsynced.length > 0) {
+              unsynced.forEach(p => {
+                supabase.from('projects').upsert({
+                  id: p.id,
+                  title: p.title,
+                  client_name: p.clientName,
+                  category: p.category,
+                  materials_used: p.materialsUsed,
+                  location: p.location,
+                  year: p.year,
+                  desc: p.desc,
+                  image: p.image
+                }).catch(() => {});
+              });
+              const merged = [...unsynced, ...formatted];
+              setItem(KEYS.PROJECTS, merged);
+              return merged;
+            }
+          }
+
+          setItem(KEYS.PROJECTS, formatted);
+          return formatted;
+        } else {
+          // Supabase is empty! Auto-seed Supabase with defaultProjects
+          const seedData = (Array.isArray(local) && local.length > 0) ? local : defaultProjects;
+          seedData.forEach(p => {
+            supabase.from('projects').upsert({
+              id: p.id,
+              title: p.title,
+              client_name: p.clientName,
+              category: p.category,
+              materials_used: p.materialsUsed,
+              location: p.location,
+              year: p.year,
+              desc: p.desc,
+              image: p.image
+            }).catch(() => {});
+          });
+          setItem(KEYS.PROJECTS, seedData);
+          return seedData;
+        }
       }
     } catch (err) {
       console.warn('Supabase client fetch projects error:', err);
@@ -513,53 +522,58 @@ export async function getPartnersAsync() {
   if (isSupabaseActive()) {
     try {
       const { data, error } = await supabase.from('partners').select('*').order('created_at', { ascending: false });
-      if (!error && Array.isArray(data) && data.length > 0) {
-        const formatted = data.map(p => ({
-          id: p.id,
-          name: p.name,
-          shortName: p.short_name,
-          sector: p.sector,
-          description: p.description,
-          logo: p.logo,
-          website: p.website
-        }));
-
-        if (Array.isArray(local) && local.length > 0) {
-          const supabaseIds = new Set(formatted.map(p => p.id));
-          const unsynced = local.filter(p => !supabaseIds.has(p.id));
-          if (unsynced.length > 0) {
-            unsynced.forEach(p => {
-              supabase.from('partners').upsert({
-                id: p.id,
-                name: p.name,
-                short_name: p.shortName,
-                sector: p.sector,
-                description: p.description,
-                logo: p.logo,
-                website: p.website
-              }).catch(() => {});
-            });
-            const merged = [...unsynced, ...formatted];
-            setItem(KEYS.PARTNERS, merged);
-            return merged;
-          }
-        }
-
-        setItem(KEYS.PARTNERS, formatted);
-        return formatted;
-      } else if (Array.isArray(local) && local.length > 0) {
-        local.forEach(p => {
-          supabase.from('partners').upsert({
+      if (!error && Array.isArray(data)) {
+        if (data.length > 0) {
+          const formatted = data.map(p => ({
             id: p.id,
             name: p.name,
-            short_name: p.shortName,
+            shortName: p.short_name,
             sector: p.sector,
             description: p.description,
             logo: p.logo,
             website: p.website
-          }).catch(() => {});
-        });
-        return local;
+          }));
+
+          if (Array.isArray(local) && local.length > 0) {
+            const supabaseIds = new Set(formatted.map(p => p.id));
+            const unsynced = local.filter(p => !supabaseIds.has(p.id));
+            if (unsynced.length > 0) {
+              unsynced.forEach(p => {
+                supabase.from('partners').upsert({
+                  id: p.id,
+                  name: p.name,
+                  short_name: p.shortName,
+                  sector: p.sector,
+                  description: p.description,
+                  logo: p.logo,
+                  website: p.website
+                }).catch(() => {});
+              });
+              const merged = [...unsynced, ...formatted];
+              setItem(KEYS.PARTNERS, merged);
+              return merged;
+            }
+          }
+
+          setItem(KEYS.PARTNERS, formatted);
+          return formatted;
+        } else {
+          // Supabase is empty! Auto-seed Supabase with defaultPartners
+          const seedData = (Array.isArray(local) && local.length > 0) ? local : defaultPartners;
+          seedData.forEach(p => {
+            supabase.from('partners').upsert({
+              id: p.id,
+              name: p.name,
+              short_name: p.shortName,
+              sector: p.sector,
+              description: p.description,
+              logo: p.logo,
+              website: p.website
+            }).catch(() => {});
+          });
+          setItem(KEYS.PARTNERS, seedData);
+          return seedData;
+        }
       }
     } catch (err) {
       console.warn('Supabase client fetch partners error:', err);
