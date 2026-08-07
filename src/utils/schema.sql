@@ -143,18 +143,22 @@ CREATE TABLE IF NOT EXISTS public.about_section (
 
 ALTER TABLE public.about_section ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Public Read About Section" ON public.about_section;
-CREATE POLICY "Public Read About Section" ON public.about_section FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Public Full Access About Section" ON public.about_section;
+CREATE POLICY "Public Full Access About Section" ON public.about_section FOR ALL USING (true) WITH CHECK (true);
 
 -- Enable RLS & Add Public Policies for products, projects, partners
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public Read Products" ON public.products;
 DROP POLICY IF EXISTS "Public Full Access Products" ON public.products;
 CREATE POLICY "Public Full Access Products" ON public.products FOR ALL USING (true) WITH CHECK (true);
 
 ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public Read Projects" ON public.projects;
 DROP POLICY IF EXISTS "Public Full Access Projects" ON public.projects;
 CREATE POLICY "Public Full Access Projects" ON public.projects FOR ALL USING (true) WITH CHECK (true);
 
 ALTER TABLE public.partners ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public Read Partners" ON public.partners;
 DROP POLICY IF EXISTS "Public Full Access Partners" ON public.partners;
 CREATE POLICY "Public Full Access Partners" ON public.partners FOR ALL USING (true) WITH CHECK (true);
 
@@ -166,6 +170,7 @@ CREATE TABLE IF NOT EXISTS public.site_settings (
 );
 
 ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public Read Site Settings" ON public.site_settings;
 DROP POLICY IF EXISTS "Public Full Access Site Settings" ON public.site_settings;
 CREATE POLICY "Public Full Access Site Settings" ON public.site_settings FOR ALL USING (true) WITH CHECK (true);
 
@@ -177,5 +182,6 @@ CREATE TABLE IF NOT EXISTS public.admin_settings (
 );
 
 ALTER TABLE public.admin_settings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public Read Admin Settings" ON public.admin_settings;
 DROP POLICY IF EXISTS "Public Full Access Admin Settings" ON public.admin_settings;
 CREATE POLICY "Public Full Access Admin Settings" ON public.admin_settings FOR ALL USING (true) WITH CHECK (true);
