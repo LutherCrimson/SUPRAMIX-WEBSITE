@@ -158,19 +158,24 @@ ALTER TABLE public.partners ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Public Full Access Partners" ON public.partners;
 CREATE POLICY "Public Full Access Partners" ON public.partners FOR ALL USING (true) WITH CHECK (true);
 
--- Seed About Section
-INSERT INTO public.about_section (id, badge_text, title, description, stat1_number, stat1_label, stat2_number, stat2_label, image_url, image_badge, image_caption)
-VALUES (
-  'about-main',
-  'About Us',
-  'Supramix Technology of Insulating Material',
-  'Supramix is a leading manufacturer and distributor established in 2019 focusing in Bituminous products, waterproofing membranes, and polymer insulation solutions. Serving local markets and distributing high-grade building insulation materials across every major island in Indonesia.',
-  '2019',
-  'Established Foundation',
-  '100%',
-  'Indonesia Coverage',
-  '/products/app-sand-membrane.jpg',
-  'Building Structure Application',
-  'APP Bituminous Waterproofing Membrane Roll on Concrete Deck'
-)
-ON CONFLICT (id) DO NOTHING;
+-- 6. TABEL SITE SETTINGS (site_settings) untuk Maintenance Mode & Global Settings
+CREATE TABLE IF NOT EXISTS public.site_settings (
+  key TEXT PRIMARY KEY,
+  value JSONB,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public Full Access Site Settings" ON public.site_settings;
+CREATE POLICY "Public Full Access Site Settings" ON public.site_settings FOR ALL USING (true) WITH CHECK (true);
+
+-- 7. TABEL ADMIN SETTINGS (admin_settings) untuk Passcode & Auth
+CREATE TABLE IF NOT EXISTS public.admin_settings (
+  key TEXT PRIMARY KEY,
+  value TEXT,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.admin_settings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public Full Access Admin Settings" ON public.admin_settings;
+CREATE POLICY "Public Full Access Admin Settings" ON public.admin_settings FOR ALL USING (true) WITH CHECK (true);

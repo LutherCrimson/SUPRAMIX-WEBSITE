@@ -748,29 +748,29 @@ export async function getMaintenanceAsync() {
 export async function saveMaintenanceAsync(config) {
   const payload = { ...defaultMaintenanceConfig, ...config };
 
-  const apiRes = await safeFetchJson('/api/admin/maintenance', {
+  // 1. Save locally immediately for instant feedback
+  saveMaintenanceSync(payload);
+
+  // 2. Sync to Server API or Supabase site_settings in background
+  safeFetchJson('/api/admin/maintenance', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
-  });
-  if (apiRes.ok && apiRes.json.success) {
-    saveMaintenanceSync(payload);
-    return payload;
-  }
-
-  if (isSupabaseActive()) {
-    try {
-      await supabase.from('site_settings').upsert({
-        key: 'maintenance',
-        value: payload,
-        updated_at: new Date().toISOString()
-      });
-    } catch (e) {
-      console.warn('Supabase site_settings maintenance upsert error:', e);
+  }).then(async (apiRes) => {
+    if (!apiRes.ok && isSupabaseActive()) {
+      try {
+        const { error } = await supabase.from('site_settings').upsert({
+          key: 'maintenance',
+          value: payload,
+          updated_at: new Date().toISOString()
+        });
+        if (error) console.warn('Supabase site_settings maintenance upsert error:', error.message);
+      } catch (e) {
+        console.warn('Supabase site_settings maintenance upsert error:', e);
+      }
     }
-  }
+  });
 
-  saveMaintenanceSync(payload);
   return payload;
 }
 
