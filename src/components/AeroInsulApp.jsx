@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { GOOGLE_SHEET_CSV_URL } from '../config';
 import logoImg from '../assets/logo.png?url';
-import { getProductsAsync, getAboutSectionAsync, defaultAboutSection, getMaintenanceAsync, getMaintenanceSync } from '../utils/dataStore';
+import { getProductsAsync, getAboutSectionAsync, defaultAboutSection, defaultProducts, getMaintenanceAsync, getMaintenanceSync } from '../utils/dataStore';
 import MaintenanceScreen from './MaintenanceScreen';
 
 import Icon from './ui/Icon';
@@ -119,59 +119,7 @@ export default function App() {
     }, 4000);
   };
 
-  // Pre-configured fallback products with specific bitumen and structural insulation images
-  const fallbackProducts = [
-    {
-      id: 'therma-max-pro',
-      name: 'ThermaMax Pro Ultra (R-6.5)',
-      category: 'Thermal Insulation',
-      price: 189,
-      unit: 'pack (12 sqm)',
-      rating: 4.9,
-      reviews: 142,
-      desc: 'Top-tier high density fiberglass batts designed with dynamic thermal fibers for extreme energy isolation in roof & wall building structures.',
-      features: ['98% Radiance Deflection', 'Zero Formaldehyde', 'Class A1 Fireproof'],
-      image: '/Projects/sph1.jpeg'
-    },
-    {
-      id: 'acoustic-shield-elite',
-      name: 'AcousticShield Elite-Mass',
-      category: 'Acoustic Insulation',
-      price: 245,
-      unit: 'roll (10 sqm)',
-      rating: 5.0,
-      reviews: 98,
-      desc: 'Engineered heavy-weight viscoelastic bitumen polymer with high density core designed to eliminate low-frequency sound & structural vibrations.',
-      features: ['STC Rating 68+', 'Micro-porous structure', 'Ultra-flexible install'],
-      image: '/Projects/binus1.jpeg'
-    },
-    {
-      id: 'hydro-guard-mem-3',
-      name: 'HydroGuard Super Bitumen Membrane Max-3',
-      category: 'Waterproofing',
-      price: 210,
-      unit: 'roll (15 sqm)',
-      rating: 4.8,
-      reviews: 81,
-      desc: 'Multi-ply APP bituminous waterproofing membrane designed for structural concrete roofs, basements, and foundation decks.',
-      features: ['Zero water permeability', 'Self-healing bitumen fibers', '100% Weather Resilience'],
-      image: '/products/app-sand-membrane.jpg'
-    },
-    {
-      id: 'pyro-block-armour',
-      name: 'PyroBlock Core Armor Insulation',
-      category: 'Fire Protection',
-      price: 279,
-      unit: 'pack (8 sqm)',
-      rating: 4.9,
-      reviews: 119,
-      desc: 'Mineral wool core composite infused with hyper-refractory crystals to withstand temperatures up to 1300°C for structural steel framing.',
-      features: ['ASTM E84 Gold Standard', 'Non-toxic decomposition', 'Moisture & Fire Resistant'],
-      image: '/Projects/kesehatan1.jpeg'
-    }
-  ];
-
-  const [premiumProducts, setPremiumProducts] = useState(fallbackProducts);
+  const [premiumProducts, setPremiumProducts] = useState(defaultProducts);
   const [aboutData, setAboutData] = useState(defaultAboutSection);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
