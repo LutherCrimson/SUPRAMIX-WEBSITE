@@ -40,52 +40,64 @@ export const defaultAboutSection = {
 // Default Products Initial Catalog
 export const defaultProducts = [
   {
-    id: 'therma-max-pro',
-    name: 'ThermaMax Pro Ultra (R-6.5)',
-    category: 'Thermal Insulation',
-    price: 189,
-    unit: 'pack (12 sqm)',
-    rating: 4.9,
-    reviews: 142,
-    desc: 'Top-tier high density fiberglass batts designed with dynamic thermal fibers for extreme energy isolation in roof & wall building structures.',
-    features: ['98% Radiance Deflection', 'Zero Formaldehyde', 'Class A1 Fireproof'],
-    image: '/Projects/sph1.jpeg'
-  },
-  {
-    id: 'acoustic-shield-elite',
-    name: 'AcousticShield Elite-Mass',
-    category: 'Acoustic Insulation',
-    price: 245,
-    unit: 'roll (10 sqm)',
+    id: 'primer-coat-wb',
+    name: 'Primer Coat',
+    category: 'Coating & Primer',
+    price: 0,
+    unit: 'pack',
     rating: 5.0,
-    reviews: 98,
-    desc: 'Engineered heavy-weight viscoelastic bitumen polymer with high density core designed to eliminate low-frequency sound & structural vibrations.',
-    features: ['STC Rating 68+', 'Micro-porous structure', 'Ultra-flexible install'],
-    image: '/Projects/binus1.jpeg'
+    reviews: 50,
+    desc: 'High performance water-based bitumen primer coat for surface preparation before membrane installation.',
+    features: ['Superior adhesion', 'Fast drying formula', 'Eco-friendly water based'],
+    image: '/products/prime-coat-wb.jpg'
   },
   {
-    id: 'hydro-guard-mem-3',
-    name: 'HydroGuard Super Bitumen Membrane Max-3',
-    category: 'Waterproofing',
-    price: 210,
-    unit: 'roll (15 sqm)',
-    rating: 4.8,
-    reviews: 81,
-    desc: 'Multi-ply APP bituminous waterproofing membrane designed for structural concrete roofs, basements, and foundation decks.',
-    features: ['Zero water permeability', 'Self-healing bitumen fibers', '100% Weather Resilience'],
+    id: 'supramix-sand-3mm',
+    name: 'Supramix Sand 3 mm APP Polyester',
+    category: 'Waterproofing Membrane',
+    price: 0,
+    unit: 'roll',
+    rating: 5.0,
+    reviews: 65,
+    desc: 'Atactic Polypropylene (APP) modified bituminous membrane reinforced with heavy-duty polyester and finished with fine sand.',
+    features: ['High tensile strength', 'Superior UV resistance', '100% Waterproof seal'],
     image: '/products/app-sand-membrane.jpg'
   },
   {
-    id: 'pyro-block-armour',
-    name: 'PyroBlock Core Armor Insulation',
-    category: 'Fire Protection',
-    price: 279,
-    unit: 'pack (8 sqm)',
-    rating: 4.9,
-    reviews: 119,
-    desc: 'Mineral wool core composite infused with hyper-refractory crystals to withstand temperatures up to 1300°C for structural steel framing.',
-    features: ['ASTM E84 Gold Standard', 'Non-toxic decomposition', 'Moisture & Fire Resistant'],
-    image: '/Projects/kesehatan1.jpeg'
+    id: 'supramix-granule-grey-3mm',
+    name: 'Supramix Granule Grey 3 mm APP Polyester',
+    category: 'Waterproofing Membrane',
+    price: 0,
+    unit: 'roll',
+    rating: 5.0,
+    reviews: 42,
+    desc: 'APP modified bitumen waterproofing membrane with grey mineral granule finish for exposed roofing applications.',
+    features: ['Exposed roof protection', 'Granule weather shield', 'Thermal reflection'],
+    image: '/products/app-sand-membrane.jpg'
+  },
+  {
+    id: 'supramix-granule-green-3mm',
+    name: 'Supramix Granule Green 3 mm APP Polyester',
+    category: 'Waterproofing Membrane',
+    price: 0,
+    unit: 'roll',
+    rating: 5.0,
+    reviews: 38,
+    desc: 'APP modified bitumen waterproofing membrane with green mineral granule surface for aesthetic roof gardens & exposed decks.',
+    features: ['Green aesthetic finish', 'Aesthetic roofing option', 'Heavy-duty durability'],
+    image: '/products/basalt-spring-green.jpg'
+  },
+  {
+    id: 'supramix-pe-film-3mm',
+    name: 'Supramix PE Film 3 mm APP',
+    category: 'Waterproofing Membrane',
+    price: 0,
+    unit: 'roll',
+    rating: 5.0,
+    reviews: 55,
+    desc: 'Polyethylene film finished APP modified bituminous membrane designed for double-layer roofing and underground tanking.',
+    features: ['PE Film finish', 'Flexible installation', 'Heavy duty tanking'],
+    image: '/products/app-pe-membrane.jpg'
   }
 ];
 
@@ -232,8 +244,51 @@ export async function getProductsAsync() {
           ...p,
           features: Array.isArray(p.features) ? p.features : (typeof p.features === 'string' ? (tryParseJson(p.features) || []) : [])
         }));
+
+        // If local browser has extra products, sync them to Supabase
+        if (Array.isArray(local) && local.length > 0) {
+          const supabaseIds = new Set(formatted.map(p => p.id));
+          const unsynced = local.filter(p => !supabaseIds.has(p.id));
+          if (unsynced.length > 0) {
+            unsynced.forEach(p => {
+              supabase.from('products').upsert({
+                id: p.id,
+                name: p.name,
+                category: p.category || '',
+                price: Number(p.price) || 0,
+                unit: p.unit || '',
+                rating: Number(p.rating) || 5.0,
+                reviews: Number(p.reviews) || 0,
+                desc: p.desc || '',
+                features: Array.isArray(p.features) ? p.features : [],
+                image: p.image || ''
+              }).catch(() => {});
+            });
+            const merged = [...unsynced, ...formatted];
+            setItem(KEYS.PRODUCTS, merged);
+            return merged;
+          }
+        }
+
         setItem(KEYS.PRODUCTS, formatted);
         return formatted;
+      } else if (Array.isArray(local) && local.length > 0) {
+        // If Supabase returned 0 rows but local has products, sync local products to Supabase
+        local.forEach(p => {
+          supabase.from('products').upsert({
+            id: p.id,
+            name: p.name,
+            category: p.category || '',
+            price: Number(p.price) || 0,
+            unit: p.unit || '',
+            rating: Number(p.rating) || 5.0,
+            reviews: Number(p.reviews) || 0,
+            desc: p.desc || '',
+            features: Array.isArray(p.features) ? p.features : [],
+            image: p.image || ''
+          }).catch(() => {});
+        });
+        return local;
       }
     } catch (err) {
       console.warn('Supabase client fetch products error:', err);
@@ -246,7 +301,7 @@ export async function getProductsAsync() {
     return apiRes.json.data;
   }
 
-  return Array.isArray(local) ? local : defaultProducts;
+  return (Array.isArray(local) && local.length > 0) ? local : defaultProducts;
 }
 
 function tryParseJson(str) {
