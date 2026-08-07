@@ -301,7 +301,7 @@ export default function ClientsApp() {
             <p className="text-sm text-slate-500">Explore some of PT SUPRAMIX's notable corporate partnerships and national building projects.</p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
             {clients.map((client, idx) => (
               <div
                 key={idx}

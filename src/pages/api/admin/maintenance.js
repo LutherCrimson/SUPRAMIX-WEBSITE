@@ -20,7 +20,18 @@ export async function GET() {
 
     if (error) throw error;
 
-    const maintenanceData = data && data.value ? (typeof data.value === 'string' ? JSON.parse(data.value) : data.value) : null;
+    let maintenanceData = null;
+    if (data && data.value) {
+      if (typeof data.value === 'string') {
+        try {
+          maintenanceData = JSON.parse(data.value);
+        } catch (e) {
+          maintenanceData = null;
+        }
+      } else {
+        maintenanceData = data.value;
+      }
+    }
 
     return new Response(JSON.stringify({ success: true, data: maintenanceData }), {
       status: 200,

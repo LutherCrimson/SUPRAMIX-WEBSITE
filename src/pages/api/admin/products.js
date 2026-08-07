@@ -19,9 +19,18 @@ export async function GET() {
 
     if (error) throw error;
 
+    const safeParseJson = (str) => {
+      try {
+        const res = JSON.parse(str);
+        return Array.isArray(res) ? res : [];
+      } catch (e) {
+        return [];
+      }
+    };
+
     const formatted = (data || []).map(p => ({
       ...p,
-      features: Array.isArray(p.features) ? p.features : (typeof p.features === 'string' ? JSON.parse(p.features) : [])
+      features: Array.isArray(p.features) ? p.features : (typeof p.features === 'string' ? safeParseJson(p.features) : [])
     }));
 
     return new Response(JSON.stringify({ success: true, data: formatted }), {

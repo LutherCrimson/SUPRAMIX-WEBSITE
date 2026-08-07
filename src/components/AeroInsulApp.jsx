@@ -933,7 +933,7 @@ export default function App() {
           </div>
 
           {/* Interactive Material Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
             {loadingProducts ? (
               [1, 2, 3, 4].map((i) => (
                 <div key={i} className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 flex flex-col justify-between overflow-hidden animate-pulse">
