@@ -267,7 +267,15 @@ function tryParseJson(str) {
 }
 
 export async function saveProductAsync(product) {
-  const targetId = (product.id && String(product.id).trim()) ? String(product.id).trim() : 'prod-' + Date.now();
+  if (!isSupabaseActive()) {
+    throw new Error('Supabase is not configured');
+  }
+
+  const targetId =
+    product.id && String(product.id).trim()
+      ? String(product.id).trim()
+      : 'prod-' + Date.now();
+
   const productToSave = {
     ...product,
     id: targetId,
@@ -275,41 +283,27 @@ export async function saveProductAsync(product) {
     category: product.category || '',
     price: Number(product.price) || 0,
     unit: product.unit || '',
-    rating: Number(product.rating) || 5.0,
+    rating: Number(product.rating) || 5,
     reviews: Number(product.reviews) || 0,
     desc: product.desc || '',
-    features: Array.isArray(product.features) ? product.features : [],
+    features: Array.isArray(product.features)
+      ? product.features
+      : [],
     image: product.image || ''
   };
 
-  if (isSupabaseActive()) {
-    try {
-      const { data, error } = await supabase
-        .from('products')
-        .upsert(productToSave)
-        .select()
-        .single();
+  const { data, error } = await supabase
+    .from('products')
+    .upsert(productToSave)
+    .select()
+    .single();
 
-      if (error) {
-        console.error('Supabase client upsert product error:', error);
-        throw error;
-      }
-      return data || productToSave;
-    } catch (err) {
-      console.warn('Supabase client upsert product error, falling back to API:', err);
-      const apiRes = await safeFetchJson('/api/admin/products', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(productToSave)
-      });
-      if (apiRes.ok && apiRes.json && apiRes.json.success) {
-        return productToSave;
-      }
-      throw err;
-    }
+  if (error) {
+    console.error('Failed to save product:', error);
+    throw error;
   }
 
-  return saveProduct(productToSave);
+  return data;
 }
 
 export async function deleteProductAsync(id) {
