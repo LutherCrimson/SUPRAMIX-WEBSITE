@@ -307,29 +307,20 @@ export async function saveProductAsync(product) {
 }
 
 export async function deleteProductAsync(id) {
-  if (isSupabaseActive()) {
-    try {
-      const { error } = await supabase.from('products').delete().eq('id', id);
-      if (error) {
-        console.error('Supabase client delete product error:', error);
-        throw error;
-      }
-      return { success: true, id };
-    } catch (err) {
-      console.warn('Supabase delete product error, falling back to API:', err);
-      const apiRes = await safeFetchJson('/api/admin/products', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id })
-      });
-      if (apiRes.ok && apiRes.json && apiRes.json.success) {
-        return { success: true, id };
-      }
-      throw err;
-    }
+  if (!isSupabaseActive()) {
+    throw new Error('Supabase is not configured');
   }
 
-  deleteProduct(id);
+  const { error } = await supabase
+    .from('products')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Failed to delete product:', error);
+    throw error;
+  }
+
   return { success: true, id };
 }
 
