@@ -246,7 +246,6 @@ export async function getProductsAsync() {
             ...p,
             features: Array.isArray(p.features) ? p.features : (typeof p.features === 'string' ? (tryParseJson(p.features) || []) : [])
           }));
-          setItem(KEYS.PRODUCTS, formatted);
           return formatted;
         } else {
           validFallback.forEach(p => {
@@ -263,7 +262,6 @@ export async function getProductsAsync() {
               image: p.image || ''
             }).catch(() => {});
           });
-          setItem(KEYS.PRODUCTS, validFallback);
           return validFallback;
         }
       }
@@ -274,11 +272,9 @@ export async function getProductsAsync() {
 
   const apiRes = await safeFetchJson('/api/admin/products');
   if (apiRes.ok && apiRes.json && apiRes.json.success && Array.isArray(apiRes.json.data) && apiRes.json.data.length > 0) {
-    setItem(KEYS.PRODUCTS, apiRes.json.data);
     return apiRes.json.data;
   }
 
-  setItem(KEYS.PRODUCTS, validFallback);
   return validFallback;
 }
 
@@ -292,64 +288,75 @@ function tryParseJson(str) {
 
 export async function saveProductAsync(product) {
   const targetId = (product.id && String(product.id).trim()) ? String(product.id).trim() : 'prod-' + Date.now();
-  const productToSave = { ...product, id: targetId };
+  const productToSave = {
+    ...product,
+    id: targetId,
+    name: product.name || '',
+    category: product.category || '',
+    price: Number(product.price) || 0,
+    unit: product.unit || '',
+    rating: Number(product.rating) || 5.0,
+    reviews: Number(product.reviews) || 0,
+    desc: product.desc || '',
+    features: Array.isArray(product.features) ? product.features : [],
+    image: product.image || ''
+  };
 
-  // 1. Save locally IMMEDIATELY for zero lag & instant response
-  const updatedLocal = saveProduct(productToSave);
-
-  // 2. Direct Supabase Upsert
   if (isSupabaseActive()) {
     try {
-      const { error } = await supabase.from('products').upsert({
-        id: productToSave.id,
-        name: productToSave.name,
-        category: productToSave.category || '',
-        price: Number(productToSave.price) || 0,
-        unit: productToSave.unit || '',
-        rating: Number(productToSave.rating) || 5.0,
-        reviews: Number(productToSave.reviews) || 0,
-        desc: productToSave.desc || '',
-        features: Array.isArray(productToSave.features) ? productToSave.features : [],
-        image: productToSave.image || ''
-      });
-      if (error) console.warn('Supabase client upsert product error:', error.message);
+      const { data, error } = await supabase
+        .from('products')
+        .upsert(productToSave)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Supabase client upsert product error:', error);
+        throw error;
+      }
+      return data || productToSave;
     } catch (err) {
-      console.warn('Supabase client upsert product error:', err);
+      console.warn('Supabase client upsert product error, falling back to API:', err);
+      const apiRes = await safeFetchJson('/api/admin/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(productToSave)
+      });
+      if (apiRes.ok && apiRes.json && apiRes.json.success) {
+        return productToSave;
+      }
+      throw err;
     }
   }
 
-  // 3. Background API ping
-  safeFetchJson('/api/admin/products', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(productToSave)
-  });
-
-  return updatedLocal;
+  return saveProduct(productToSave);
 }
 
 export async function deleteProductAsync(id) {
-  // 1. Remove locally IMMEDIATELY for zero lag & instant response
-  const updatedLocal = deleteProduct(id);
-
-  // 2. Direct Supabase Delete
   if (isSupabaseActive()) {
     try {
       const { error } = await supabase.from('products').delete().eq('id', id);
-      if (error) console.warn('Supabase client delete product error:', error.message);
+      if (error) {
+        console.error('Supabase client delete product error:', error);
+        throw error;
+      }
+      return { success: true, id };
     } catch (err) {
-      console.warn('Supabase client delete product error:', err);
+      console.warn('Supabase delete product error, falling back to API:', err);
+      const apiRes = await safeFetchJson('/api/admin/products', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      });
+      if (apiRes.ok && apiRes.json && apiRes.json.success) {
+        return { success: true, id };
+      }
+      throw err;
     }
   }
 
-  // 3. Background API ping
-  safeFetchJson('/api/admin/products', {
-    method: 'DELETE',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id })
-  });
-
-  return updatedLocal;
+  deleteProduct(id);
+  return { success: true, id };
 }
 
 // --- PROJECTS ---
@@ -374,7 +381,6 @@ export async function getProjectsAsync() {
             desc: p.desc,
             image: p.image
           }));
-          setItem(KEYS.PROJECTS, formatted);
           return formatted;
         } else {
           validFallback.forEach(p => {
@@ -390,7 +396,6 @@ export async function getProjectsAsync() {
               image: p.image
             }).catch(() => {});
           });
-          setItem(KEYS.PROJECTS, validFallback);
           return validFallback;
         }
       }
@@ -401,11 +406,9 @@ export async function getProjectsAsync() {
 
   const apiRes = await safeFetchJson('/api/admin/projects');
   if (apiRes.ok && apiRes.json && apiRes.json.success && Array.isArray(apiRes.json.data) && apiRes.json.data.length > 0) {
-    setItem(KEYS.PROJECTS, apiRes.json.data);
     return apiRes.json.data;
   }
 
-  setItem(KEYS.PROJECTS, validFallback);
   return validFallback;
 }
 
@@ -413,11 +416,9 @@ export async function saveProjectAsync(project) {
   const targetId = (project.id && String(project.id).trim()) ? String(project.id).trim() : 'proj-' + Date.now();
   const projectToSave = { ...project, id: targetId };
 
-  const updatedLocal = saveProject(projectToSave);
-
   if (isSupabaseActive()) {
     try {
-      const { error } = await supabase.from('projects').upsert({
+      const { data, error } = await supabase.from('projects').upsert({
         id: projectToSave.id,
         title: projectToSave.title,
         client_name: projectToSave.clientName,
@@ -427,41 +428,55 @@ export async function saveProjectAsync(project) {
         year: projectToSave.year,
         desc: projectToSave.desc,
         image: projectToSave.image
-      });
-      if (error) console.warn('Supabase client upsert project error:', error.message);
+      }).select().single();
+
+      if (error) {
+        console.error('Supabase client upsert project error:', error);
+        throw error;
+      }
+      return data || projectToSave;
     } catch (err) {
-      console.warn('Supabase client upsert project error:', err);
+      console.warn('Supabase client upsert project error, falling back to API:', err);
+      const apiRes = await safeFetchJson('/api/admin/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(projectToSave)
+      });
+      if (apiRes.ok && apiRes.json && apiRes.json.success) {
+        return projectToSave;
+      }
+      throw err;
     }
   }
 
-  safeFetchJson('/api/admin/projects', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(projectToSave)
-  });
-
-  return updatedLocal;
+  return saveProject(projectToSave);
 }
 
 export async function deleteProjectAsync(id) {
-  const updatedLocal = deleteProject(id);
-
   if (isSupabaseActive()) {
     try {
       const { error } = await supabase.from('projects').delete().eq('id', id);
-      if (error) console.warn('Supabase client delete project error:', error.message);
+      if (error) {
+        console.error('Supabase client delete project error:', error);
+        throw error;
+      }
+      return { success: true, id };
     } catch (err) {
-      console.warn('Supabase client delete project error:', err);
+      console.warn('Supabase delete project error, falling back to API:', err);
+      const apiRes = await safeFetchJson('/api/admin/projects', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      });
+      if (apiRes.ok && apiRes.json && apiRes.json.success) {
+        return { success: true, id };
+      }
+      throw err;
     }
   }
 
-  safeFetchJson('/api/admin/projects', {
-    method: 'DELETE',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id })
-  });
-
-  return updatedLocal;
+  deleteProject(id);
+  return { success: true, id };
 }
 
 // --- PARTNERS ---
@@ -484,7 +499,6 @@ export async function getPartnersAsync() {
             logo: p.logo,
             website: p.website
           }));
-          setItem(KEYS.PARTNERS, formatted);
           return formatted;
         } else {
           validFallback.forEach(p => {
@@ -498,7 +512,6 @@ export async function getPartnersAsync() {
               website: p.website
             }).catch(() => {});
           });
-          setItem(KEYS.PARTNERS, validFallback);
           return validFallback;
         }
       }
@@ -509,11 +522,9 @@ export async function getPartnersAsync() {
 
   const apiRes = await safeFetchJson('/api/admin/partners');
   if (apiRes.ok && apiRes.json && apiRes.json.success && Array.isArray(apiRes.json.data) && apiRes.json.data.length > 0) {
-    setItem(KEYS.PARTNERS, apiRes.json.data);
     return apiRes.json.data;
   }
 
-  setItem(KEYS.PARTNERS, validFallback);
   return validFallback;
 }
 
@@ -521,11 +532,9 @@ export async function savePartnerAsync(partner) {
   const targetId = (partner.id && String(partner.id).trim()) ? String(partner.id).trim() : 'part-' + Date.now();
   const partnerToSave = { ...partner, id: targetId };
 
-  const updatedLocal = savePartner(partnerToSave);
-
   if (isSupabaseActive()) {
     try {
-      const { error } = await supabase.from('partners').upsert({
+      const { data, error } = await supabase.from('partners').upsert({
         id: partnerToSave.id,
         name: partnerToSave.name,
         short_name: partnerToSave.shortName,
@@ -533,41 +542,55 @@ export async function savePartnerAsync(partner) {
         description: partnerToSave.description,
         logo: partnerToSave.logo,
         website: partnerToSave.website
-      });
-      if (error) console.warn('Supabase client upsert partner error:', error.message);
+      }).select().single();
+
+      if (error) {
+        console.error('Supabase client upsert partner error:', error);
+        throw error;
+      }
+      return data || partnerToSave;
     } catch (err) {
-      console.warn('Supabase client upsert partner error:', err);
+      console.warn('Supabase client upsert partner error, falling back to API:', err);
+      const apiRes = await safeFetchJson('/api/admin/partners', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(partnerToSave)
+      });
+      if (apiRes.ok && apiRes.json && apiRes.json.success) {
+        return partnerToSave;
+      }
+      throw err;
     }
   }
 
-  safeFetchJson('/api/admin/partners', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(partnerToSave)
-  });
-
-  return updatedLocal;
+  return savePartner(partnerToSave);
 }
 
 export async function deletePartnerAsync(id) {
-  const updatedLocal = deletePartner(id);
-
   if (isSupabaseActive()) {
     try {
       const { error } = await supabase.from('partners').delete().eq('id', id);
-      if (error) console.warn('Supabase client delete partner error:', error.message);
+      if (error) {
+        console.error('Supabase client delete partner error:', error);
+        throw error;
+      }
+      return { success: true, id };
     } catch (err) {
-      console.warn('Supabase client delete partner error:', err);
+      console.warn('Supabase delete partner error, falling back to API:', err);
+      const apiRes = await safeFetchJson('/api/admin/partners', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      });
+      if (apiRes.ok && apiRes.json && apiRes.json.success) {
+        return { success: true, id };
+      }
+      throw err;
     }
   }
 
-  safeFetchJson('/api/admin/partners', {
-    method: 'DELETE',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id })
-  });
-
-  return updatedLocal;
+  deletePartner(id);
+  return { success: true, id };
 }
 
 // --- PASSCODE / AUTH SERVER API ---
