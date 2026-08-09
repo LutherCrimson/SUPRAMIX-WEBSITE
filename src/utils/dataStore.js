@@ -234,48 +234,28 @@ async function safeFetchJson(url, options = {}) {
 // --- PRODUCTS ---
 
 export async function getProductsAsync() {
-  const local = getItem(KEYS.PRODUCTS, null);
-  const validFallback = (Array.isArray(local) && local.length > 0) ? local : defaultProducts;
-
-  if (isSupabaseActive()) {
-    try {
-      const { data, error } = await supabase.from('products').select('*');
-      if (!error && Array.isArray(data)) {
-        if (data.length > 0) {
-          const formatted = data.map(p => ({
-            ...p,
-            features: Array.isArray(p.features) ? p.features : (typeof p.features === 'string' ? (tryParseJson(p.features) || []) : [])
-          }));
-          return formatted;
-        } else {
-          validFallback.forEach(p => {
-            supabase.from('products').upsert({
-              id: p.id,
-              name: p.name,
-              category: p.category || '',
-              price: Number(p.price) || 0,
-              unit: p.unit || '',
-              rating: Number(p.rating) || 5.0,
-              reviews: Number(p.reviews) || 0,
-              desc: p.desc || '',
-              features: Array.isArray(p.features) ? p.features : [],
-              image: p.image || ''
-            }).catch(() => {});
-          });
-          return validFallback;
-        }
-      }
-    } catch (err) {
-      console.warn('Supabase client fetch products error:', err);
-    }
+  if (!isSupabaseActive()) {
+    throw new Error('Supabase is not configured');
   }
 
-  const apiRes = await safeFetchJson('/api/admin/products');
-  if (apiRes.ok && apiRes.json && apiRes.json.success && Array.isArray(apiRes.json.data) && apiRes.json.data.length > 0) {
-    return apiRes.json.data;
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .order('id', { ascending: true });
+
+  if (error) {
+    console.error('Failed to fetch products from Supabase:', error);
+    throw error;
   }
 
-  return validFallback;
+  return (data || []).map(p => ({
+    ...p,
+    features: Array.isArray(p.features)
+      ? p.features
+      : typeof p.features === 'string'
+        ? (tryParseJson(p.features) || [])
+        : []
+  }));
 }
 
 function tryParseJson(str) {
