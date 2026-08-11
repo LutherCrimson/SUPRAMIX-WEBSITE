@@ -28,7 +28,8 @@ export async function GET() {
       location: p.location,
       year: p.year,
       desc: p.desc,
-      image: p.image
+      image: p.image_url || '',
+      image_url: p.image_url || ''
     }));
 
     return new Response(JSON.stringify({ success: true, data: formatted }), {
@@ -64,7 +65,7 @@ export async function POST({ request }) {
       location: project.location || '',
       year: project.year || '',
       desc: project.desc || '',
-      image: project.image || ''
+      image_url: project.image_url || ''
     });
 
     if (error) throw error;
@@ -83,27 +84,107 @@ export async function POST({ request }) {
 
 export async function DELETE({ request }) {
   if (!isServerSupabaseConfigured()) {
-    return new Response(JSON.stringify({ success: false, error: 'Supabase server is not configured' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: 'Supabase server is not configured'
+      }),
+      {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
   }
 
   try {
     const { id } = await request.json();
-    if (!id) throw new Error('ID project required');
 
-    const { error } = await supabaseServer.from('projects').delete().eq('id', id);
-    if (error) throw error;
+    if (!id) {
+      throw new Error('ID project required');
+    }
 
-    return new Response(JSON.stringify({ success: true, id }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    // =====================================================
+    // 1. AMBIL DATA PROJECT TERLEBIH DAHULU
+    // =====================================================
+    const { data: project, error: fetchError } = await supabaseServer
+      .from('projects')
+      .select('id, image_url')
+      .eq('id', id)
+      .single();
+
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      throw fetchError;
+    }
+
+    // =====================================================
+    // 2. HAPUS GAMBAR DARI STORAGE JIKA ADA
+    // =====================================================
+    if (project?.image_url) {
+      const marker =
+        '/storage/v1/object/public/product-images/';
+
+      if (project.image_url.includes(marker)) {
+        const storagePath = decodeURIComponent(
+          project.image_url.split(marker)[1]
+        );
+
+        if (storagePath) {
+          const { error: storageError } = await supabaseServer.storage
+            .from('product-images')
+            .remove([storagePath]);
+
+          if (storageError) {
+            console.error(
+              'Failed to delete project image from Storage:',
+              storageError
+            );
+
+            throw storageError;
+          }
+
+          console.log(
+            'Project image deleted from Storage:',
+            storagePath
+          );
+        }
+      }
+    }
+
+    // =====================================================
+    // 3. HAPUS PROJECT DARI DATABASE
+    // =====================================================
+    const { error: deleteError } = await supabaseServer
+      .from('projects')
+      .delete()
+      .eq('id', id);
+
+    if (deleteError) {
+      throw deleteError;
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        id
+      }),
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
+
   } catch (err) {
-    return new Response(JSON.stringify({ success: false, error: err.message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    console.error('Delete project failed:', err);
+
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: err.message
+      }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
   }
 }

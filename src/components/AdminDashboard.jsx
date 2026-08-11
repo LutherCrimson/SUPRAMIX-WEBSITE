@@ -87,26 +87,33 @@ export default function AdminDashboard() {
   // Modals / Forms
   const [productForm, setProductForm] = useState(null); // null or object
   const [projectForm, setProjectForm] = useState(null);
+  const [isSavingProject, setIsSavingProject] = useState(false);
   const [partnerForm, setPartnerForm] = useState(null);
 
   // Passcode update form
   const [newPasscode, setNewPasscode] = useState('');
 
-  // Handle direct file upload to base64 Data URL
+  // Handle direct file upload with validation (max 2MB, JPG/PNG/WebP)
   const handleFileUpload = (e, callback) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      alert('Ukuran file maksimal 5MB');
+    // Maksimum 2 MB, sesuai batas Supabase Storage
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Ukuran file maksimal 2MB');
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      callback(event.target.result);
-    };
-    reader.readAsDataURL(file);
+    // Validasi tipe file
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+    if (!allowedTypes.includes(file.type)) {
+      alert('Format gambar harus JPG, PNG, atau WebP');
+      return;
+    }
+
+    // Simpan File asli, JANGAN ubah menjadi Base64
+    callback(file);
   };
 
   // Check auth session
@@ -129,13 +136,9 @@ export default function AdminDashboard() {
     let projs = await getProjectsAsync();
     let parts = await getPartnersAsync();
 
-    // Auto-seed protection: If any dataset returns empty array, auto-inject default catalog immediately!
-    if (!prods || prods.length === 0 || !projs || projs.length === 0 || !parts || parts.length === 0) {
-      await resetAllDataToDefaultAsync();
-      prods = await getProductsAsync();
-      projs = await getProjectsAsync();
-      parts = await getPartnersAsync();
-    }
+    if (!prods) prods = [];
+    if (!projs) projs = [];
+    if (!parts) parts = [];
 
     setProducts(prods);
     setProjects(projs);
@@ -237,11 +240,31 @@ export default function AdminDashboard() {
   // --- PROJECT HANDLERS ---
   const handleSaveProject = async (e) => {
     e.preventDefault();
-    if (!projectForm.title) return alert('Judul project wajib diisi!');
-    await saveProjectAsync(projectForm);
-    await loadAllData();
-    setProjectForm(null);
-    notify('Project berhasil disimpan!');
+
+    if (isSavingProject) return;
+
+    if (!projectForm.title) {
+      return alert('Judul project wajib diisi!');
+    }
+
+    setIsSavingProject(true);
+
+    try {
+      await saveProjectAsync(projectForm);
+
+      await loadAllData();
+
+      setProjectForm(null);
+
+      notify('Project berhasil disimpan!');
+    } catch (err) {
+      alert(
+        'Gagal menyimpan project: ' +
+        (err?.message || 'Terjadi kesalahan')
+      );
+    } finally {
+      setIsSavingProject(false);
+    }
   };
 
   const handleDeleteProject = async (id) => {
@@ -301,10 +324,32 @@ export default function AdminDashboard() {
   };
 
   const handleReset = async () => {
-    if (confirm('PERINGATAN: Ini akan mengisikan & mengembalikan seluruh data produk, project, dan partner ke database Supabase Cloud & Local. Lanjutkan?')) {
+    const confirmed = confirm(
+      'PERINGATAN: Ini akan mengisikan & mengembalikan seluruh data produk, project, dan partner ke database Supabase Cloud & Local. Lanjutkan?'
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
       await resetAllDataToDefaultAsync();
+
       await loadAllData();
-      notify('Data telah berhasil di-inject & di-sync ke Supabase Cloud!');
+
+      notify(
+        'Data telah berhasil di-reset & di-sync ke Supabase Cloud!'
+      );
+    } catch (err) {
+      console.error(
+        'Reset data failed:',
+        err
+      );
+
+      alert(
+        'Gagal melakukan reset data: ' +
+        (err?.message || 'Terjadi kesalahan')
+      );
     }
   };
 
@@ -687,7 +732,7 @@ export default function AdminDashboard() {
                     )}
                     <div className="p-6 space-y-3">
                       <div>
-                        <span className="text-[11px] text-slate-400 font-semibold">{proj.clientName} ({proj.year})</span>
+                        <span className="text-[11px] text-slate-400 font-semibold">{proj.clientName}</span>
                         <h3 className="font-extrabold text-white text-lg leading-snug">{proj.title}</h3>
                       </div>
                       
@@ -1328,7 +1373,7 @@ export default function AdminDashboard() {
                   <div className="flex gap-2">
                     <input
                       type="text"
-                      value={productForm.image}
+                      value={typeof productForm.image === 'string' ? productForm.image : ''}
                       onChange={(e) => setProductForm({ ...productForm, image: e.target.value })}
                       placeholder="Upload file atau paste URL"
                       className="w-full bg-[#070D1F] border border-white/10 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-[#0F4CFF]"
@@ -1339,14 +1384,22 @@ export default function AdminDashboard() {
                       <input
                         type="file"
                         accept="image/*"
-                        onChange={(e) => handleFileUpload(e, (url) => setProductForm({ ...productForm, image: url }))}
+                        onChange={(e) => handleFileUpload(e, (file) => setProductForm({ ...productForm, image: file }))}
                         className="hidden"
                       />
                     </label>
                   </div>
                   {productForm.image && (
-                    <div className="mt-2 relative w-20 h-20 rounded-xl overflow-hidden border border-white/10">
-                      <img src={productForm.image} alt="Preview" className="w-full h-full object-cover" />
+                    <div className="mt-2 relative rounded-xl overflow-hidden border border-white/10 bg-slate-900/50 p-1">
+                      <img
+                        src={
+                          productForm.image instanceof File
+                            ? URL.createObjectURL(productForm.image)
+                            : productForm.image
+                        }
+                        alt="Preview Produk"
+                        className="w-full h-48 object-contain rounded-xl"
+                      />
                     </div>
                   )}
                 </div>
@@ -1459,7 +1512,7 @@ export default function AdminDashboard() {
                   <div className="flex gap-2">
                     <input
                       type="text"
-                      value={projectForm.image}
+                      value={typeof projectForm.image === 'string' ? projectForm.image : ''}
                       onChange={(e) => setProjectForm({ ...projectForm, image: e.target.value })}
                       placeholder="Upload file atau paste URL"
                       className="w-full bg-[#070D1F] border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-[#0F4CFF]"
@@ -1470,14 +1523,31 @@ export default function AdminDashboard() {
                       <input
                         type="file"
                         accept="image/*"
-                        onChange={(e) => handleFileUpload(e, (url) => setProjectForm({ ...projectForm, image: url }))}
+                        onChange={(e) =>
+                          handleFileUpload(
+                            e,
+                            (file) =>
+                              setProjectForm({
+                                ...projectForm,
+                                image: file
+                              })
+                          )
+                        }
                         className="hidden"
                       />
                     </label>
                   </div>
                   {projectForm.image && (
                     <div className="mt-2 relative w-24 h-20 rounded-xl overflow-hidden border border-white/10">
-                      <img src={projectForm.image} alt="Preview" className="w-full h-full object-cover" />
+                      <img
+                        src={
+                          projectForm.image instanceof File
+                            ? URL.createObjectURL(projectForm.image)
+                            : projectForm.image
+                        }
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                   )}
                 </div>
@@ -1504,9 +1574,10 @@ export default function AdminDashboard() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-[#0F4CFF] text-white font-bold shadow-lg shadow-[#0F4CFF]/20"
+                  disabled={isSavingProject}
+                  className="px-5 py-2.5 rounded-xl bg-[#0F4CFF] text-white font-bold shadow-lg shadow-[#0F4CFF]/20 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Simpan Project
+                  {isSavingProject ? 'Menyimpan...' : 'Simpan Project'}
                 </button>
               </div>
             </form>

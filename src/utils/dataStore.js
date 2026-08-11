@@ -240,7 +240,19 @@ export async function getProductsAsync() {
 
   const { data, error } = await supabase
     .from('products')
-    .select('*')
+    .select(`
+      id,
+      name,
+      category,
+      price,
+      unit,
+      rating,
+      reviews,
+      desc,
+      features,
+      image_url,
+      created_at
+    `)
     .order('id', { ascending: true });
 
   if (error) {
@@ -250,6 +262,8 @@ export async function getProductsAsync() {
 
   return (data || []).map(p => ({
     ...p,
+    image: p.image_url || '',
+    image_url: p.image_url || '',
     features: Array.isArray(p.features)
       ? p.features
       : typeof p.features === 'string'
@@ -276,8 +290,62 @@ export async function saveProductAsync(product) {
       ? String(product.id).trim()
       : 'prod-' + Date.now();
 
+  // Simpan URL gambar lama sebelum ada perubahan
+  const oldImageUrl =
+    product.image_url ||
+    (
+      typeof product.image === 'string' &&
+      product.image.startsWith('http')
+        ? product.image
+        : ''
+    );
+
+  console.log('OLD IMAGE URL:', oldImageUrl);
+  console.log('NEW IMAGE FILE:', product.image);
+
+  let imageUrl = oldImageUrl;
+  let newFilePath = null;
+
+  // =========================================================
+  // JIKA USER MEMILIH GAMBAR BARU
+  // =========================================================
+  if (product.image instanceof File) {
+    const file = product.image;
+
+    const fileExt =
+      file.name.split('.').pop()?.toLowerCase() || 'jpg';
+
+    newFilePath =
+      `products/${targetId}-${Date.now()}.${fileExt}`;
+
+    // Upload gambar baru
+    const { error: uploadError } = await supabase.storage
+      .from('product-images')
+      .upload(newFilePath, file, {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: file.type,
+      });
+
+    if (uploadError) {
+      console.error('Image upload failed:', uploadError);
+      throw uploadError;
+    }
+
+    // Ambil public URL gambar baru
+    const { data: publicUrlData } = supabase.storage
+      .from('product-images')
+      .getPublicUrl(newFilePath);
+
+    imageUrl = publicUrlData.publicUrl;
+
+    console.log('New image uploaded:', imageUrl);
+  }
+
+  // =========================================================
+  // DATA PRODUK YANG DISIMPAN
+  // =========================================================
   const productToSave = {
-    ...product,
     id: targetId,
     name: product.name || '',
     category: product.category || '',
@@ -289,18 +357,82 @@ export async function saveProductAsync(product) {
     features: Array.isArray(product.features)
       ? product.features
       : [],
-    image: product.image || ''
+    image_url: imageUrl,
   };
 
+  // =========================================================
+  // SIMPAN / UPDATE DATABASE
+  // =========================================================
   const { data, error } = await supabase
     .from('products')
-    .upsert(productToSave)
+    .upsert(productToSave, {
+      onConflict: 'id',
+    })
     .select()
     .single();
 
+  // Jika database gagal setelah gambar baru berhasil di-upload,
+  // hapus gambar baru supaya tidak menjadi file yatim/orphan.
   if (error) {
     console.error('Failed to save product:', error);
+
+    if (newFilePath) {
+      const { error: cleanupError } = await supabase.storage
+        .from('product-images')
+        .remove([newFilePath]);
+
+      if (cleanupError) {
+        console.error(
+          'Failed to cleanup new image:',
+          cleanupError
+        );
+      }
+    }
+
     throw error;
+  }
+
+  // =========================================================
+  // HAPUS GAMBAR LAMA
+  // Hanya dilakukan kalau user benar-benar upload gambar baru
+  // =========================================================
+  if (newFilePath && oldImageUrl) {
+    try {
+      const marker =
+        '/storage/v1/object/public/product-images/';
+
+      if (oldImageUrl.includes(marker)) {
+        const oldFilePath = decodeURIComponent(
+          oldImageUrl.split(marker)[1]
+        );
+
+        // Jangan sampai menghapus file baru
+        if (oldFilePath && oldFilePath !== newFilePath) {
+          console.log('DELETING OLD FILE:', oldFilePath);
+
+          const { error: deleteError } = await supabase.storage
+            .from('product-images')
+            .remove([oldFilePath]);
+
+          if (deleteError) {
+            console.error(
+              'Failed to delete old image:',
+              deleteError
+            );
+          } else {
+            console.log(
+              'Old image deleted:',
+              oldFilePath
+            );
+          }
+        }
+      }
+    } catch (deleteException) {
+      console.error(
+        'Error while deleting old image:',
+        deleteException
+      );
+    }
   }
 
   return data;
@@ -311,17 +443,114 @@ export async function deleteProductAsync(id) {
     throw new Error('Supabase is not configured');
   }
 
-  const { error } = await supabase
-    .from('products')
-    .delete()
-    .eq('id', id);
+  try {
+    // =====================================================
+    // 1. AMBIL DATA PRODUCT TERLEBIH DAHULU
+    // =====================================================
+    const { data: product, error: fetchError } = await supabase
+      .from('products')
+      .select('id, image_url')
+      .eq('id', id)
+      .single();
 
-  if (error) {
-    console.error('Failed to delete product:', error);
-    throw error;
+    if (fetchError) {
+      console.error(
+        'Supabase client fetch product before delete error:',
+        fetchError
+      );
+      throw fetchError;
+    }
+
+    // =====================================================
+    // 2. HAPUS GAMBAR DARI STORAGE
+    // =====================================================
+    const imageUrl = product?.image_url;
+
+    if (imageUrl) {
+      const marker =
+        '/storage/v1/object/public/product-images/';
+
+      if (imageUrl.includes(marker)) {
+        const encodedPath = imageUrl.split(marker)[1];
+        const storagePath = decodeURIComponent(encodedPath);
+
+        if (storagePath) {
+          const { error: storageError } = await supabase.storage
+            .from('product-images')
+            .remove([storagePath]);
+
+          if (storageError) {
+            console.error(
+              'Supabase client delete product image error:',
+              storageError
+            );
+
+            throw storageError;
+          }
+
+          console.log(
+            'Product image deleted from Storage:',
+            storagePath
+          );
+        }
+      }
+    }
+
+    // =====================================================
+    // 3. HAPUS PRODUCT DARI DATABASE
+    // =====================================================
+    const { error: deleteError } = await supabase
+      .from('products')
+      .delete()
+      .eq('id', id);
+
+    if (deleteError) {
+      console.error(
+        'Supabase client delete product error:',
+        deleteError
+      );
+
+      throw deleteError;
+    }
+
+    return {
+      success: true,
+      id
+    };
+
+  } catch (err) {
+    // =====================================================
+    // 4. FALLBACK KE API SERVER
+    // =====================================================
+    console.warn(
+      'Supabase client delete product error, falling back to API:',
+      err
+    );
+
+    const apiRes = await safeFetchJson(
+      '/api/admin/products',
+      {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ id })
+      }
+    );
+
+    if (
+      apiRes.ok &&
+      apiRes.json &&
+      apiRes.json.success
+    ) {
+      return {
+        success: true,
+        id
+      };
+    }
+
+    throw err;
   }
-
-  return { success: true, id };
 }
 
 // --- PROJECTS ---
@@ -344,7 +573,10 @@ export async function getProjectsAsync() {
             location: p.location,
             year: p.year,
             desc: p.desc,
-            image: p.image
+
+            // URL Storage baru
+            image: p.image_url || '',
+            image_url: p.image_url || '',
           }));
           return formatted;
         } else {
@@ -358,6 +590,7 @@ export async function getProjectsAsync() {
               location: p.location,
               year: p.year,
               desc: p.desc,
+              image_url: p.image,
               image: p.image
             }).catch(() => {});
           });
@@ -378,70 +611,273 @@ export async function getProjectsAsync() {
 }
 
 export async function saveProjectAsync(project) {
-  const targetId = (project.id && String(project.id).trim()) ? String(project.id).trim() : 'proj-' + Date.now();
-  const projectToSave = { ...project, id: targetId };
+  if (!isSupabaseActive()) {
+    throw new Error('Supabase is not configured');
+  }
 
-  if (isSupabaseActive()) {
-    try {
-      const { data, error } = await supabase.from('projects').upsert({
-        id: projectToSave.id,
-        title: projectToSave.title,
-        client_name: projectToSave.clientName,
-        category: projectToSave.category,
-        materials_used: projectToSave.materialsUsed,
-        location: projectToSave.location,
-        year: projectToSave.year,
-        desc: projectToSave.desc,
-        image: projectToSave.image
-      }).select().single();
+  const targetId =
+    project.id && String(project.id).trim()
+      ? String(project.id).trim()
+      : 'proj-' + Date.now();
 
-      if (error) {
-        console.error('Supabase client upsert project error:', error);
-        throw error;
-      }
-      return data || projectToSave;
-    } catch (err) {
-      console.warn('Supabase client upsert project error, falling back to API:', err);
-      const apiRes = await safeFetchJson('/api/admin/projects', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(projectToSave)
+  // URL gambar lama
+  const oldImageUrl =
+    project.image_url ||
+    (
+      typeof project.image === 'string' &&
+      project.image.startsWith('http')
+        ? project.image
+        : ''
+    );
+
+  let imageUrl = oldImageUrl;
+  let newFilePath = null;
+
+  // =====================================================
+  // UPLOAD GAMBAR BARU
+  // =====================================================
+  if (project.image instanceof File) {
+    const file = project.image;
+
+    const fileExt =
+      file.name.split('.').pop()?.toLowerCase() || 'jpg';
+
+    newFilePath =
+      `projects/${targetId}-${Date.now()}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('product-images')
+      .upload(newFilePath, file, {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: file.type,
       });
-      if (apiRes.ok && apiRes.json && apiRes.json.success) {
-        return projectToSave;
+
+    if (uploadError) {
+      console.error('Project image upload failed:', uploadError);
+      throw uploadError;
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from('product-images')
+      .getPublicUrl(newFilePath);
+
+    imageUrl = publicUrlData.publicUrl;
+
+    console.log('Project image uploaded:', imageUrl);
+  }
+
+  // =====================================================
+  // SIMPAN DATABASE
+  // =====================================================
+  const projectToSave = {
+    id: targetId,
+    title: project.title || '',
+    client_name: project.clientName || '',
+    category: project.category || '',
+    materials_used: project.materialsUsed || '',
+    location: project.location || '',
+    year: project.year || '',
+    desc: project.desc || '',
+    image_url: imageUrl,
+  };
+
+  const { data, error } = await supabase
+    .from('projects')
+    .upsert(projectToSave, {
+      onConflict: 'id',
+    })
+    .select()
+    .single();
+
+  // =====================================================
+  // CLEANUP GAMBAR BARU JIKA DATABASE GAGAL
+  // =====================================================
+  if (error) {
+    console.error('Failed to save project:', error);
+
+    if (newFilePath) {
+      const { error: cleanupError } = await supabase.storage
+        .from('product-images')
+        .remove([newFilePath]);
+
+      if (cleanupError) {
+        console.error(
+          'Failed to cleanup new project image:',
+          cleanupError
+        );
       }
-      throw err;
+    }
+
+    throw error;
+  }
+
+  // =====================================================
+  // HAPUS GAMBAR LAMA JIKA GAMBAR DIGANTI
+  // =====================================================
+  if (newFilePath && oldImageUrl) {
+    try {
+      const marker =
+        '/storage/v1/object/public/product-images/';
+
+      if (oldImageUrl.includes(marker)) {
+        const oldFilePath = decodeURIComponent(
+          oldImageUrl.split(marker)[1]
+        );
+
+        if (
+          oldFilePath &&
+          oldFilePath !== newFilePath
+        ) {
+          const { error: deleteError } = await supabase.storage
+            .from('product-images')
+            .remove([oldFilePath]);
+
+          if (deleteError) {
+            console.error(
+              'Failed to delete old project image:',
+              deleteError
+            );
+          } else {
+            console.log(
+              'Old project image deleted:',
+              oldFilePath
+            );
+          }
+        }
+      }
+    } catch (deleteException) {
+      console.error(
+        'Error deleting old project image:',
+        deleteException
+      );
     }
   }
 
-  return saveProject(projectToSave);
+  return data;
 }
 
 export async function deleteProjectAsync(id) {
   if (isSupabaseActive()) {
     try {
-      const { error } = await supabase.from('projects').delete().eq('id', id);
-      if (error) {
-        console.error('Supabase client delete project error:', error);
-        throw error;
+      // =====================================================
+      // 1. AMBIL DATA PROJECT TERLEBIH DAHULU
+      // =====================================================
+      const { data: project, error: fetchError } = await supabase
+        .from('projects')
+        .select('id, image_url')
+        .eq('id', id)
+        .single();
+
+      if (fetchError) {
+        console.error(
+          'Supabase client fetch project before delete error:',
+          fetchError
+        );
+        throw fetchError;
       }
-      return { success: true, id };
+
+      // =====================================================
+      // 2. HAPUS GAMBAR DARI STORAGE
+      // =====================================================
+      const imageUrl = project?.image_url;
+
+      if (imageUrl) {
+        const marker =
+          '/storage/v1/object/public/product-images/';
+
+        if (imageUrl.includes(marker)) {
+          const encodedPath = imageUrl.split(marker)[1];
+          const storagePath = decodeURIComponent(encodedPath);
+
+          if (storagePath) {
+            const { error: storageError } = await supabase.storage
+              .from('product-images')
+              .remove([storagePath]);
+
+            if (storageError) {
+              console.error(
+                'Supabase client delete project image error:',
+                storageError
+              );
+
+              throw storageError;
+            }
+
+            console.log(
+              'Project image deleted from Storage:',
+              storagePath
+            );
+          }
+        }
+      }
+
+      // =====================================================
+      // 3. HAPUS PROJECT DARI DATABASE
+      // =====================================================
+      const { error: deleteError } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', id);
+
+      if (deleteError) {
+        console.error(
+          'Supabase client delete project error:',
+          deleteError
+        );
+
+        throw deleteError;
+      }
+
+      return {
+        success: true,
+        id
+      };
+
     } catch (err) {
-      console.warn('Supabase delete project error, falling back to API:', err);
-      const apiRes = await safeFetchJson('/api/admin/projects', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id })
-      });
-      if (apiRes.ok && apiRes.json && apiRes.json.success) {
-        return { success: true, id };
+      // =====================================================
+      // 4. FALLBACK KE API SERVER
+      // =====================================================
+      console.warn(
+        'Supabase client delete project error, falling back to API:',
+        err
+      );
+
+      const apiRes = await safeFetchJson(
+        '/api/admin/projects',
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ id })
+        }
+      );
+
+      if (
+        apiRes.ok &&
+        apiRes.json &&
+        apiRes.json.success
+      ) {
+        return {
+          success: true,
+          id
+        };
       }
+
       throw err;
     }
   }
 
+  // =====================================================
+  // 5. FALLBACK LOCAL
+  // =====================================================
   deleteProject(id);
-  return { success: true, id };
+
+  return {
+    success: true,
+    id
+  };
 }
 
 // --- PARTNERS ---
@@ -723,67 +1159,291 @@ export function resetAllDataToDefault() {
 }
 
 export async function resetAllDataToDefaultAsync() {
-  resetAllDataToDefault();
+  if (!isSupabaseActive()) {
+    resetAllDataToDefault();
 
-  if (isSupabaseActive()) {
-    try {
-      await Promise.all(defaultProducts.map(p =>
-        supabase.from('products').upsert({
-          id: p.id,
-          name: p.name,
-          category: p.category || '',
-          price: Number(p.price) || 0,
-          unit: p.unit || '',
-          rating: Number(p.rating) || 5.0,
-          reviews: Number(p.reviews) || 0,
-          desc: p.desc || '',
-          features: Array.isArray(p.features) ? p.features : [],
-          image: p.image || ''
-        })
-      ));
-
-      await Promise.all(defaultProjects.map(p =>
-        supabase.from('projects').upsert({
-          id: p.id,
-          title: p.title,
-          client_name: p.clientName,
-          category: p.category,
-          materials_used: p.materialsUsed,
-          location: p.location,
-          year: p.year,
-          desc: p.desc,
-          image: p.image
-        })
-      ));
-
-      await Promise.all(defaultPartners.map(p =>
-        supabase.from('partners').upsert({
-          id: p.id,
-          name: p.name,
-          short_name: p.shortName,
-          sector: p.sector,
-          description: p.description,
-          logo: p.logo,
-          website: p.website
-        })
-      ));
-
-      await supabase.from('about_section').upsert({
-        ...defaultAboutSection,
-        id: 'about-main'
-      });
-
-      await supabase.from('site_settings').upsert({
-        key: 'maintenance',
-        value: defaultMaintenanceConfig,
-        updated_at: new Date().toISOString()
-      });
-    } catch (e) {
-      console.warn('Supabase reset error:', e);
-    }
+    return {
+      success: true
+    };
   }
 
-  return { success: true };
+  try {
+    // =====================================================
+    // 1. AMBIL DATA IMAGE URL LAMA
+    // =====================================================
+
+    const [
+      { data: products, error: productsFetchError },
+      { data: projects, error: projectsFetchError },
+      { data: about, error: aboutFetchError }
+    ] = await Promise.all([
+      supabase
+        .from('products')
+        .select('id, image_url'),
+
+      supabase
+        .from('projects')
+        .select('id, image_url'),
+
+      supabase
+        .from('about_section')
+        .select('id, image_url')
+        .eq('id', 'about-main')
+        .maybeSingle()
+    ]);
+
+    if (productsFetchError) {
+      throw productsFetchError;
+    }
+
+    if (projectsFetchError) {
+      throw projectsFetchError;
+    }
+
+    if (aboutFetchError) {
+      throw aboutFetchError;
+    }
+
+    // =====================================================
+    // 2. CATAT STORAGE PATH LAMA
+    // JANGAN HAPUS DULU
+    // =====================================================
+
+    const marker =
+      '/storage/v1/object/public/product-images/';
+
+    const storagePaths = new Set();
+
+    const addStoragePath = (imageUrl) => {
+      if (
+        typeof imageUrl !== 'string' ||
+        !imageUrl.includes(marker)
+      ) {
+        return;
+      }
+
+      try {
+        const encodedPath =
+          imageUrl.split(marker)[1];
+
+        if (!encodedPath) {
+          return;
+        }
+
+        const storagePath =
+          decodeURIComponent(encodedPath);
+
+        if (storagePath) {
+          storagePaths.add(storagePath);
+        }
+      } catch (e) {
+        console.warn(
+          'Failed to parse Storage image URL:',
+          imageUrl,
+          e
+        );
+      }
+    };
+
+    (products || []).forEach((product) => {
+      addStoragePath(product.image_url);
+    });
+
+    (projects || []).forEach((project) => {
+      addStoragePath(project.image_url);
+    });
+
+    if (about?.image_url) {
+      addStoragePath(about.image_url);
+    }
+
+    // =====================================================
+    // 3. RESET PRODUCTS
+    // =====================================================
+
+    const productResults = await Promise.all(
+      defaultProducts.map((p) =>
+        supabase
+          .from('products')
+          .upsert({
+            id: p.id,
+            name: p.name,
+            category: p.category || '',
+            price: Number(p.price) || 0,
+            unit: p.unit || '',
+            rating: Number(p.rating) || 5.0,
+            reviews: Number(p.reviews) || 0,
+            desc: p.desc || '',
+            features: Array.isArray(p.features)
+              ? p.features
+              : [],
+            image_url: p.image || '',
+            image: p.image || ''
+          })
+      )
+    );
+
+    const productError =
+      productResults.find(
+        (result) => result.error
+      )?.error;
+
+    if (productError) {
+      throw productError;
+    }
+
+    // =====================================================
+    // 4. RESET PROJECTS
+    // =====================================================
+
+    const projectResults = await Promise.all(
+      defaultProjects.map((p) =>
+        supabase
+          .from('projects')
+          .upsert({
+            id: p.id,
+            title: p.title,
+            client_name: p.clientName || '',
+            category: p.category || '',
+            materials_used: p.materialsUsed || '',
+            location: p.location || '',
+            year: p.year || '',
+            desc: p.desc || '',
+            image_url: p.image || '',
+            image: p.image || ''
+          })
+      )
+    );
+
+    const projectError =
+      projectResults.find(
+        (result) => result.error
+      )?.error;
+
+    if (projectError) {
+      throw projectError;
+    }
+
+    // =====================================================
+    // 5. RESET PARTNERS
+    // =====================================================
+
+    const partnerResults = await Promise.all(
+      defaultPartners.map((p) =>
+        supabase
+          .from('partners')
+          .upsert({
+            id: p.id,
+            name: p.name,
+            short_name: p.shortName || '',
+            sector: p.sector || '',
+            description: p.description || '',
+            logo: p.logo || '',
+            website: p.website || '#'
+          })
+      )
+    );
+
+    const partnerError =
+      partnerResults.find(
+        (result) => result.error
+      )?.error;
+
+    if (partnerError) {
+      throw partnerError;
+    }
+
+    // =====================================================
+    // 6. RESET ABOUT
+    // =====================================================
+
+    const { error: aboutError } =
+      await supabase
+        .from('about_section')
+        .upsert({
+          ...defaultAboutSection,
+          id: 'about-main',
+          image_url:
+            defaultAboutSection.image_url || ''
+        });
+
+    if (aboutError) {
+      throw aboutError;
+    }
+
+    // =====================================================
+    // 7. RESET SITE SETTINGS
+    // =====================================================
+
+    const { error: settingsError } =
+      await supabase
+        .from('site_settings')
+        .upsert({
+          key: 'maintenance',
+          value: defaultMaintenanceConfig,
+          updated_at: new Date().toISOString()
+        });
+
+    if (settingsError) {
+      throw settingsError;
+    }
+
+    // =====================================================
+    // 8. DATABASE SUDAH BERHASIL
+    // SEKARANG BARU HAPUS FILE STORAGE LAMA
+    // =====================================================
+
+    if (storagePaths.size > 0) {
+      const pathsToDelete =
+        Array.from(storagePaths);
+
+      console.log(
+        'Reset: deleting old custom Storage files:',
+        pathsToDelete
+      );
+
+      const {
+        error: storageDeleteError
+      } = await supabase.storage
+        .from('product-images')
+        .remove(pathsToDelete);
+
+      if (storageDeleteError) {
+        // Jangan rollback database.
+        // Database sudah berhasil di-reset.
+        console.error(
+          'Reset database succeeded, but Storage cleanup failed:',
+          storageDeleteError
+        );
+      } else {
+        console.log(
+          'Reset: old custom Storage files deleted successfully'
+        );
+      }
+    }
+
+    // =====================================================
+    // 9. RESET LOCAL STORAGE
+    // =====================================================
+
+    resetAllDataToDefault();
+
+    console.log(
+      'All data successfully reset to default.'
+    );
+
+    return {
+      success: true
+    };
+
+  } catch (e) {
+    console.error(
+      'Supabase reset error:',
+      e
+    );
+
+    throw e;
+  }
 }
 
 // --- ABOUT SECTION ASYNC & LOCAL FUNCTIONS ---
@@ -811,24 +1471,193 @@ export async function getAboutSectionAsync() {
 }
 
 export async function saveAboutSectionAsync(aboutData) {
-  const payload = { ...defaultAboutSection, ...aboutData, id: 'about-main' };
+  const targetId = 'about-main';
 
-  setItem(KEYS.ABOUT, payload);
-
-  if (isSupabaseActive()) {
-    try {
-      const { error } = await supabase.from('about_section').upsert(payload);
-      if (error) console.warn('Supabase about_section upsert error:', error.message);
-    } catch (e) {
-      console.warn('Supabase about_section upsert error:', e);
-    }
+  if (!isSupabaseActive()) {
+    throw new Error('Supabase is not configured');
   }
 
-  safeFetchJson('/api/admin/about', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
+  // =====================================================
+  // 1. AMBIL URL GAMBAR LAMA
+  // =====================================================
+  const oldImageUrl =
+    typeof aboutData.image_url === 'string' &&
+    aboutData.image_url.startsWith('http')
+      ? aboutData.image_url
+      : (
+          typeof aboutData.image_url === 'string'
+            ? aboutData.image_url
+            : defaultAboutSection.image_url
+        );
+
+  let imageUrl = oldImageUrl;
+  let newFilePath = null;
+
+  // =====================================================
+  // 2. UPLOAD GAMBAR BARU JIKA USER MEMILIH FILE
+  // =====================================================
+  if (aboutData.image_url instanceof File) {
+    const file = aboutData.image_url;
+
+    const fileExt =
+      file.name.split('.').pop()?.toLowerCase() || 'jpg';
+
+    newFilePath =
+      `about/${targetId}-${Date.now()}.${fileExt}`;
+
+    const { error: uploadError } =
+      await supabase.storage
+        .from('product-images')
+        .upload(newFilePath, file, {
+          cacheControl: '3600',
+          upsert: false,
+          contentType: file.type,
+        });
+
+    if (uploadError) {
+      console.error(
+        'About image upload failed:',
+        uploadError
+      );
+
+      throw uploadError;
+    }
+
+    const { data: publicUrlData } =
+      supabase.storage
+        .from('product-images')
+        .getPublicUrl(newFilePath);
+
+    imageUrl = publicUrlData.publicUrl;
+
+    console.log(
+      'About image uploaded:',
+      imageUrl
+    );
+  }
+
+  // =====================================================
+  // 3. BUAT PAYLOAD DATABASE
+  // =====================================================
+  const payload = {
+    id: targetId,
+    badge_text: aboutData.badge_text || defaultAboutSection.badge_text,
+    title: aboutData.title || '',
+    description: aboutData.description || '',
+    stat1_number: aboutData.stat1_number || '',
+    stat1_label: aboutData.stat1_label || '',
+    stat2_number: aboutData.stat2_number || '',
+    stat2_label: aboutData.stat2_label || '',
+    image_url: imageUrl,
+    image_badge: aboutData.image_badge || '',
+    image_caption: aboutData.image_caption || '',
+    updated_at: new Date().toISOString()
+  };
+
+  // =====================================================
+  // 4. SIMPAN DATABASE
+  // =====================================================
+  try {
+    const { error } =
+      await supabase
+        .from('about_section')
+        .upsert(payload, {
+          onConflict: 'id'
+        });
+
+    if (error) {
+      console.error(
+        'Supabase about_section upsert error:',
+        error
+      );
+
+      // Hapus gambar baru jika database gagal
+      if (newFilePath) {
+        await supabase.storage
+          .from('product-images')
+          .remove([newFilePath]);
+      }
+
+      throw error;
+    }
+  } catch (e) {
+    console.error(
+      'Supabase about_section save error:',
+      e
+    );
+
+    throw e;
+  }
+
+  // =====================================================
+  // 5. SIMPAN KE LOCAL STATE
+  // =====================================================
+  setItem(KEYS.ABOUT, payload);
+
+  // =====================================================
+  // 6. SYNC KE API SERVER
+  // =====================================================
+  const apiRes = await safeFetchJson(
+    '/api/admin/about',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    }
+  );
+
+  if (!apiRes.ok) {
+    console.warn(
+      'About API sync failed:',
+      apiRes.json
+    );
+  }
+
+  // =====================================================
+  // 7. HAPUS GAMBAR LAMA JIKA GAMBAR DIGANTI
+  // =====================================================
+  if (newFilePath && oldImageUrl) {
+    try {
+      const marker =
+        '/storage/v1/object/public/product-images/';
+
+      if (oldImageUrl.includes(marker)) {
+        const oldFilePath =
+          decodeURIComponent(
+            oldImageUrl.split(marker)[1]
+          );
+
+        if (
+          oldFilePath &&
+          oldFilePath !== newFilePath
+        ) {
+          const { error: deleteError } =
+            await supabase.storage
+              .from('product-images')
+              .remove([oldFilePath]);
+
+          if (deleteError) {
+            console.error(
+              'Failed to delete old About image:',
+              deleteError
+            );
+          } else {
+            console.log(
+              'Old About image deleted:',
+              oldFilePath
+            );
+          }
+        }
+      }
+    } catch (deleteException) {
+      console.error(
+        'Error deleting old About image:',
+        deleteException
+      );
+    }
+  }
 
   return payload;
 }

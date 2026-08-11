@@ -239,10 +239,6 @@ export default function ProjectsApp() {
                       <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-3.5 py-1 rounded-full text-xs font-bold text-[#0B1F4D] shadow-sm border border-white">
                         {proj.category || 'Infrastructure'}
                       </div>
-                      <div className="absolute top-4 right-4 bg-[#0B1F4D]/80 backdrop-blur text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5">
-                        <Calendar className="w-3.5 h-3.5 text-[#0F4CFF]" />
-                        <span>{proj.year || '2023'}</span>
-                      </div>
                     </div>
 
                     {/* Card Content */}
@@ -323,7 +319,7 @@ export default function ProjectsApp() {
             <div className="w-full md:w-1/2 p-6 md:p-8 flex flex-col justify-between overflow-y-auto max-h-[90vh] text-slate-900">
               <div className="space-y-4">
                 <span className="text-xs font-bold text-[#0F4CFF] uppercase tracking-wider block">
-                  {selectedProject.location} • {selectedProject.year}
+                  {selectedProject.location}
                 </span>
 
                 <h3 className="text-2xl font-extrabold text-[#0B1F4D]">
